@@ -354,6 +354,9 @@ class GN(object):
                                 files['ssl'] + files['ssl_internal_headers'])
       self.PrintVariableSection(out, 'ssl_headers', files['ssl_headers'])
 
+      self.PrintVariableSection(out, 'oqs_headers',
+                                files['oqs_headers'])
+
       for ((osname, arch), asm_files) in asm_outputs:
         self.PrintVariableSection(
             out, 'crypto_sources_%s_%s' % (osname, arch), asm_files)
@@ -711,6 +714,7 @@ def main(platforms):
       FindHeaderFiles(os.path.join('src', 'crypto'), NoTests) +
       FindHeaderFiles(os.path.join('src', 'third_party', 'fiat'), NoTests) +
       FindHeaderFiles(os.path.join('src', 'third_party', 'sike'), NoTests))
+  oqs_h_files = FindHeaderFiles(os.path.join('src', 'oqs', 'include', 'oqs'), NoTests)
 
   files = {
       'bcm_crypto': bcm_crypto_c_files,
@@ -729,6 +733,7 @@ def main(platforms):
       'tool_headers': tool_h_files,
       'test_support': test_support_c_files,
       'test_support_headers': test_support_h_files,
+      'oqs_headers': oqs_h_files,
   }
 
   asm_outputs = sorted(WriteAsmFiles(ReadPerlAsmOperations()).iteritems())
