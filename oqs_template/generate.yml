@@ -1,0 +1,13 @@
+# N.B: NIDS must match the curve IDs used
+# in OQS-OpenSSL 1.1.1 for interoperability.
+kems:
+  -
+    name: "oqs_kemdefault"
+    nid: "511"
+    mix_with: [{'name': 'p256', 'nid':'767'}]
+    oqs_meth: "OQS_KEM_alg_default"
+  -
+    name: "frodo640aes"
+    nid: "512"
+    mix_with: [{'name': 'p256', 'nid':'768'}]
+    oqs_meth: "OQS_KEM_alg_frodokem_640_aes"

@@ -417,9 +417,10 @@ class TLSFuzzer {
     static const int kCurves[] = {
         NID_CECPQ2, NID_X25519, NID_X9_62_prime256v1,
         NID_secp384r1, NID_secp521r1
-///// OQS_TEMPLATE_FRAGMENT_LIST_PQ_NIDS_START
-        NID_oqs_kemdefault, NID_oqs_p256_kemdefault,
-///// OQS_TEMPLATE_FRAGMENT_LIST_PQ_NIDS_END
+///// OQS_TEMPLATE_FRAGMENT_LIST_NIDS_START
+        NID_oqs_kemdefault, NID_p256_oqs_kemdefault,
+        NID_frodo640aes, NID_p256_frodo640aes,
+///// OQS_TEMPLATE_FRAGMENT_LIST_NIDS_END
     };
     if (!SSL_CTX_set1_curves(ctx_.get(), kCurves,
                              OPENSSL_ARRAY_SIZE(kCurves))) {
