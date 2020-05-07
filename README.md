@@ -64,6 +64,19 @@ The following quantum-safe algorithms from liboqs are supported (assuming they h
 The following hybrid algorithms are supported only for L1 schemes; they combine an L1 quantum-safe algorithm listed above with ECDH that uses NIST's P256 curve:
 - `p256_<KEX>`, where ``<KEX>`` is any one of the L1 algorithms listed above.
 
+#### Signatures
+
+The following quantum-safe algorithms from liboqs are supported (assuming they have been enabled in liboqs):
+
+- `oqs_sigdefault` (see [here](https://github.com/open-quantum-safe/openssl/wiki/Using-liboqs-algorithms-that-are-not-in-the-forks#oqsdefault) for what this denotes)
+- `dilithium2`
+- `dilithium3`
+- `dilithium4`
+- `qteslapi`
+- `qteslapiii`
+- `picnicl1fs`
+- `picnic2l1fs`
+
 ## Quickstart
 
 The steps below have been confirmed to work on Ubuntu 19.10 (gcc-8.3.0).
@@ -106,7 +119,10 @@ on **Ubuntu**, run:
 
 The fork can also be built with shared libraries, to do so, run `cmake -DBUILD_SHARED_LIBRARIES=ON -GNinja ..`.
 
-To execute the white-box and black-box tests, run `ninja run_tests` from the `build` directory. These largely exclude the OQS key-exchanges, which can be tested using `ninja run_oqs_tests`.
+To execute the white-box and black-box tests, run `ninja run_tests` from the `build` directory. These exclude the OQS key-exchange and digital signature algorithms, which can be tested using `ninja run_basic_oqs_tests` and `ninja run_full_oqs_tests`:
+
+- `ninja run_basic_oqs_tests` first tests all key-exchanges with the signature set to `oqs_sigdefault`, and then tests all signatures with the key-exchange algorithm set to `oqs_kemdefault`.
+- `ninja run_full_oqs_tests` tests all possible combinations of OQS key-exchange and signature schemes.
 
 ### Running
 
@@ -114,11 +130,11 @@ To execute the white-box and black-box tests, run `ninja run_tests` from the `bu
 
 BoringSSL contains a basic TLS server (`s_server`) and TLS client (`s_client`) which can be used to demonstrate and test TLS connections.
 
-To run a basic TLS server with all libOQS ciphersuites enabled, from the `build` directory, run:
+To run a basic TLS server with all libOQS ciphersuites enabled, from the `build` directory, run (where `<SIG>` = one of the quantum-safe or hybrid signature algorithms listed in the [Supported Algorithms](#supported-algorithms) section above; if the `sig-alg` option is omitted, the default classical algorithm `ecdhe` with prime curve `X9_62_prime256v1` is used):
 
-	tool/bssl server -accept 4433 -loop
+	tool/bssl server -accept 4433 -sig-alg <SIG> -loop
 
-In another terminal window, you can run a TLS client requesting one of the supported ciphersuites (`<KEX>` = one of the quantum-safe or hybrid key exchange algorithms listed in the [Supported Algorithms](#supported-algorithms) section above):
+In another terminal window, you can run a TLS client requesting one of the supported ciphersuites (where `<KEX>` = one of the quantum-safe or hybrid key exchange algorithms listed in the [Supported Algorithms](#supported-algorithms) section above):
 
 	tool/bssl client -curves <KEX> -connect localhost:4433
 
