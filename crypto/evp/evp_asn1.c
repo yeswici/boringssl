@@ -73,7 +73,8 @@ static const EVP_PKEY_ASN1_METHOD *const kASN1Methods[] = {
     &dsa_asn1_meth,
     &ed25519_asn1_meth,
     &x25519_asn1_meth,
-    &oqs_sigdefault_asn1_meth,
+///// OQS_TEMPLATE_FRAGMENT_LIST_PKEY_ASN1_METHS_START
+    &oqs_sig_default_asn1_meth,
     &dilithium2_asn1_meth,
     &dilithium3_asn1_meth,
     &dilithium4_asn1_meth,
@@ -81,7 +82,8 @@ static const EVP_PKEY_ASN1_METHOD *const kASN1Methods[] = {
     &picnic2l1fs_asn1_meth,
     &qteslapi_asn1_meth,
     &qteslapiii_asn1_meth,
-    // FIXMEOQS: add template
+    &sphincs_haraka_128f_robust_asn1_meth,
+///// OQS_TEMPLATE_FRAGMENT_LIST_PKEY_ASN1_METHS_END
 };
 
 static int parse_key_type(CBS *cbs, int *out_type) {

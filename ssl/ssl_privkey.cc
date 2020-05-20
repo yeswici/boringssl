@@ -72,17 +72,20 @@
 BSSL_NAMESPACE_BEGIN
 
 bool ssl_is_key_type_supported(int key_type) {
-  return key_type == EVP_PKEY_RSA || key_type == EVP_PKEY_EC ||
+  return key_type == EVP_PKEY_RSA ||
+         key_type == EVP_PKEY_EC ||
          key_type == EVP_PKEY_ED25519 ||
-         key_type == EVP_PKEY_OQS_SIGDEFAULT ||
+///// OQS_TEMPLATE_FRAGMENT_CHECK_KEY_TYPE_START
+         key_type == EVP_PKEY_OQS_SIG_DEFAULT ||
          key_type == EVP_PKEY_DILITHIUM2 ||
          key_type == EVP_PKEY_DILITHIUM3 ||
          key_type == EVP_PKEY_DILITHIUM4 ||
          key_type == EVP_PKEY_PICNICL1FS ||
          key_type == EVP_PKEY_PICNIC2L1FS ||
          key_type == EVP_PKEY_QTESLAPI ||
-         key_type == EVP_PKEY_QTESLAPIII;
-         // FIXMEOQS: add template
+         key_type == EVP_PKEY_QTESLAPIII ||
+         key_type == EVP_PKEY_SPHINCS_HARAKA_128F_ROBUST;
+///// OQS_TEMPLATE_FRAGMENT_CHECK_KEY_TYPE_END
 }
 
 static bool ssl_set_pkey(CERT *cert, EVP_PKEY *pkey) {
@@ -131,15 +134,17 @@ static const SSL_SIGNATURE_ALGORITHM kSignatureAlgorithms[] = {
      false},
 
     {SSL_SIGN_ED25519, EVP_PKEY_ED25519, NID_undef, nullptr, false},
-    {SSL_SIGN_OQS_SIGDEFAULT, EVP_PKEY_OQS_SIGDEFAULT, NID_undef, nullptr, false},
-    {SSL_SIGN_DILITHIUM2, EVP_PKEY_DILITHIUM2, NID_undef, nullptr, false},
-    {SSL_SIGN_DILITHIUM3, EVP_PKEY_DILITHIUM3, NID_undef, nullptr, false},
-    {SSL_SIGN_DILITHIUM4, EVP_PKEY_DILITHIUM4, NID_undef, nullptr, false},
-    {SSL_SIGN_PICNICL1FS, EVP_PKEY_PICNICL1FS, NID_undef, nullptr, false},
-    {SSL_SIGN_PICNIC2L1FS, EVP_PKEY_PICNIC2L1FS, NID_undef, nullptr, false},
-    {SSL_SIGN_QTESLAPI, EVP_PKEY_QTESLAPI, NID_undef, nullptr, false},
-    {SSL_SIGN_QTESLAPIII, EVP_PKEY_QTESLAPIII, NID_undef, nullptr, false},
-    // FIXMEOQS: add template
+///// OQS_TEMPLATE_FRAGMENT_LIST_SSL_SIG_ALGS_START
+    {SSL_SIGN_OQS_SIG_DEFAULT, EVP_PKEY_OQS_SIG_DEFAULT, NID_undef, &EVP_sha256, false},
+    {SSL_SIGN_DILITHIUM2, EVP_PKEY_DILITHIUM2, NID_undef, &EVP_sha256, false},
+    {SSL_SIGN_DILITHIUM3, EVP_PKEY_DILITHIUM3, NID_undef, &EVP_sha256, false},
+    {SSL_SIGN_DILITHIUM4, EVP_PKEY_DILITHIUM4, NID_undef, &EVP_sha384, false},
+    {SSL_SIGN_PICNICL1FS, EVP_PKEY_PICNICL1FS, NID_undef, &EVP_sha256, false},
+    {SSL_SIGN_PICNIC2L1FS, EVP_PKEY_PICNIC2L1FS, NID_undef, &EVP_sha256, false},
+    {SSL_SIGN_QTESLAPI, EVP_PKEY_QTESLAPI, NID_undef, &EVP_sha256, false},
+    {SSL_SIGN_QTESLAPIII, EVP_PKEY_QTESLAPIII, NID_undef, &EVP_sha384, false},
+    {SSL_SIGN_SPHINCS_HARAKA_128F_ROBUST, EVP_PKEY_SPHINCS_HARAKA_128F_ROBUST, NID_undef, &EVP_sha256, false},
+///// OQS_TEMPLATE_FRAGMENT_LIST_SSL_SIG_ALGS_END
 };
 
 static const SSL_SIGNATURE_ALGORITHM *get_signature_algorithm(uint16_t sigalg) {
@@ -447,7 +452,9 @@ void SSL_CTX_set_private_key_method(SSL_CTX *ctx,
   ctx->cert->key_method = key_method;
 }
 
-static constexpr size_t kMaxSignatureAlgorithmNameLen = 23;
+// OQS note: This was changed from 23 to 30 to accommodate
+// large algorithm names (such as "Rainbow-IIIc-Cyclic-Compressed").
+static constexpr size_t kMaxSignatureAlgorithmNameLen = 30;
 
 // This was "constexpr" rather than "const", but that triggered a bug in MSVC
 // where it didn't pad the strings to the correct length.
@@ -468,7 +475,8 @@ static const struct {
     {SSL_SIGN_RSA_PSS_RSAE_SHA384, "rsa_pss_rsae_sha384"},
     {SSL_SIGN_RSA_PSS_RSAE_SHA512, "rsa_pss_rsae_sha512"},
     {SSL_SIGN_ED25519, "ed25519"},
-    {SSL_SIGN_OQS_SIGDEFAULT, "oqs_sigdefault"},
+///// OQS_TEMPLATE_FRAGMENT_NAME_SIG_ALG_START
+    {SSL_SIGN_OQS_SIG_DEFAULT, "oqs_sig_default"},
     {SSL_SIGN_DILITHIUM2, "dilithium2"},
     {SSL_SIGN_DILITHIUM3, "dilithium3"},
     {SSL_SIGN_DILITHIUM4, "dilithium4"},
@@ -476,7 +484,8 @@ static const struct {
     {SSL_SIGN_PICNIC2L1FS, "picnic2l1fs"},
     {SSL_SIGN_QTESLAPI, "qteslapi"},
     {SSL_SIGN_QTESLAPIII, "qteslapiii"},
-    // FIXMEOQS: add template
+    {SSL_SIGN_SPHINCS_HARAKA_128F_ROBUST, "sphincs_haraka_128f_robust"},
+///// OQS_TEMPLATE_FRAGMENT_NAME_SIG_ALG_END
 };
 
 const char *SSL_get_signature_algorithm_name(uint16_t sigalg,
@@ -549,8 +558,17 @@ static constexpr struct {
     {EVP_PKEY_EC, NID_sha384, SSL_SIGN_ECDSA_SECP384R1_SHA384},
     {EVP_PKEY_EC, NID_sha512, SSL_SIGN_ECDSA_SECP521R1_SHA512},
     {EVP_PKEY_ED25519, NID_undef, SSL_SIGN_ED25519},
-    // TODO: OQS Add templating
-    {EVP_PKEY_OQS_SIGDEFAULT, NID_undef, SSL_SIGN_OQS_SIGDEFAULT},
+///// OQS_TEMPLATE_FRAGMENT_ADD_SIG_ALG_MAPPINGS_START
+    {EVP_PKEY_OQS_SIG_DEFAULT, NID_sha256, SSL_SIGN_OQS_SIG_DEFAULT},
+    {EVP_PKEY_DILITHIUM2, NID_sha256, SSL_SIGN_DILITHIUM2},
+    {EVP_PKEY_DILITHIUM3, NID_sha256, SSL_SIGN_DILITHIUM3},
+    {EVP_PKEY_DILITHIUM4, NID_sha384, SSL_SIGN_DILITHIUM4},
+    {EVP_PKEY_PICNICL1FS, NID_sha256, SSL_SIGN_PICNICL1FS},
+    {EVP_PKEY_PICNIC2L1FS, NID_sha256, SSL_SIGN_PICNIC2L1FS},
+    {EVP_PKEY_QTESLAPI, NID_sha256, SSL_SIGN_QTESLAPI},
+    {EVP_PKEY_QTESLAPIII, NID_sha384, SSL_SIGN_QTESLAPIII},
+    {EVP_PKEY_SPHINCS_HARAKA_128F_ROBUST, NID_sha256, SSL_SIGN_SPHINCS_HARAKA_128F_ROBUST},
+///// OQS_TEMPLATE_FRAGMENT_ADD_SIG_ALG_MAPPINGS_END
 };
 
 static bool parse_sigalg_pairs(Array<uint16_t> *out, const int *values,

@@ -267,8 +267,8 @@ extern const EVP_PKEY_ASN1_METHOD ec_asn1_meth;
 extern const EVP_PKEY_ASN1_METHOD rsa_asn1_meth;
 extern const EVP_PKEY_ASN1_METHOD ed25519_asn1_meth;
 extern const EVP_PKEY_ASN1_METHOD x25519_asn1_meth;
-// FIXMEOQS: add template
-extern const EVP_PKEY_ASN1_METHOD oqs_sigdefault_asn1_meth;
+///// OQS_TEMPLATE_FRAGMENT_DECLARE_ASN1_METHS_START
+extern const EVP_PKEY_ASN1_METHOD oqs_sig_default_asn1_meth;
 extern const EVP_PKEY_ASN1_METHOD dilithium2_asn1_meth;
 extern const EVP_PKEY_ASN1_METHOD dilithium3_asn1_meth;
 extern const EVP_PKEY_ASN1_METHOD dilithium4_asn1_meth;
@@ -276,13 +276,15 @@ extern const EVP_PKEY_ASN1_METHOD picnicl1fs_asn1_meth;
 extern const EVP_PKEY_ASN1_METHOD picnic2l1fs_asn1_meth;
 extern const EVP_PKEY_ASN1_METHOD qteslapi_asn1_meth;
 extern const EVP_PKEY_ASN1_METHOD qteslapiii_asn1_meth;
+extern const EVP_PKEY_ASN1_METHOD sphincs_haraka_128f_robust_asn1_meth;
+///// OQS_TEMPLATE_FRAGMENT_DECLARE_ASN1_METHS_END
 
 extern const EVP_PKEY_METHOD rsa_pkey_meth;
 extern const EVP_PKEY_METHOD ec_pkey_meth;
 extern const EVP_PKEY_METHOD ed25519_pkey_meth;
 extern const EVP_PKEY_METHOD x25519_pkey_meth;
-// FIXMEOQS: add template
-extern const EVP_PKEY_METHOD oqs_sigdefault_pkey_meth;
+///// OQS_TEMPLATE_FRAGMENT_DECLARE_PKEY_METHS_START
+extern const EVP_PKEY_METHOD oqs_sig_default_pkey_meth;
 extern const EVP_PKEY_METHOD dilithium2_pkey_meth;
 extern const EVP_PKEY_METHOD dilithium3_pkey_meth;
 extern const EVP_PKEY_METHOD dilithium4_pkey_meth;
@@ -290,6 +292,8 @@ extern const EVP_PKEY_METHOD picnicl1fs_pkey_meth;
 extern const EVP_PKEY_METHOD picnic2l1fs_pkey_meth;
 extern const EVP_PKEY_METHOD qteslapi_pkey_meth;
 extern const EVP_PKEY_METHOD qteslapiii_pkey_meth;
+extern const EVP_PKEY_METHOD sphincs_haraka_128f_robust_pkey_meth;
+///// OQS_TEMPLATE_FRAGMENT_DECLARE_PKEY_METHS_END
 
 #if defined(__cplusplus)
 }  // extern C
