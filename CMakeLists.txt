@@ -557,8 +557,17 @@ add_library(crypto_test_data OBJECT crypto_test_data.cc)
 if(NOT DEFINED LIBOQS_DIR)
     set(LIBOQS_DIR ${CMAKE_SOURCE_DIR}/oqs)
 endif()
-if(NOT EXISTS ${LIBOQS_DIR}/include/oqs/oqsconfig.h)
-  message(FATAL_ERROR "This fork requires liboqs to be built first.")
+if(NOT DEFINED LIBOQS_SHARED)
+    set(LIBOQS_SHARED OFF)
+endif()
+
+if(LIBOQS_SHARED)
+    set(LIBOQS ${LIBOQS_DIR}/lib/liboqs.so)
+else()
+    set(LIBOQS ${LIBOQS_DIR}/lib/liboqs.a)
+endif()
+if(NOT EXISTS ${LIBOQS})
+  message(FATAL_ERROR "This fork requires liboqs.")
 endif()
 
 add_subdirectory(crypto)
@@ -604,14 +613,14 @@ add_custom_target(
 
 add_custom_target(
     run_basic_oqs_tests
-    COMMAND python3 -m pytest --verbose test_basic.py --bssl-shim=$<TARGET_FILE:bssl_shim> --bssl=$<TARGET_FILE:bssl>
+    COMMAND python3 -m pytest --verbose test_tls_basic.py --bssl-shim=$<TARGET_FILE:bssl_shim> --bssl=$<TARGET_FILE:bssl> --numprocesses=auto
     WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}/oqs_test
     DEPENDS all_tests bssl_shim
     ${MAYBE_USES_TERMINAL})
 
 add_custom_target(
     run_full_oqs_tests
-    COMMAND python3 -m pytest --verbose test_full.py --bssl-shim=$<TARGET_FILE:bssl_shim> --bssl=$<TARGET_FILE:bssl>
+    COMMAND python3 -m pytest --verbose test_tls_full.py --bssl-shim=$<TARGET_FILE:bssl_shim> --bssl=$<TARGET_FILE:bssl> --numprocesses=auto
     WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}/oqs_test
     DEPENDS all_tests bssl_shim
     ${MAYBE_USES_TERMINAL})
