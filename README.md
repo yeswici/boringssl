@@ -61,10 +61,21 @@ If an algorithm is provided by liboqs but is not listed below, it can still be u
 The following quantum-safe algorithms from liboqs are supported (assuming they have been enabled in liboqs):
 
 - `oqs_kem_default` (see [here](https://github.com/open-quantum-safe/boringssl/wiki/Using-liboqs-algorithms-not-in-the-fork#oqsdefault) for what this denotes)
-- `frodo640aes`
+- **FrodoKEM**: `frodo640aes`, `frodo640shake`, `frodo976aes`, `frodo976shake`, `frodo1344aes`, `frodo1344shake`
+- **BIKE**: `bike1l1cpa`, `bike1l3cpa`, `bikel1fo`, `bike1l3fo`
+- **CRYSTALS-Kyber**: `kyber512`, `kyber768`, `kyber1024`, `kyber90s512`, `kyber90s768`, `kyber90s1024`
+- **NewHope**: `newhope512cca`, `newhope1024cca`
+- **NTRU**: `ntru_hps2048509`, `ntru_hps2048677`, `ntru_hps4096821`, `ntru_hrss701`
+- **SABER**: `lightsaber`, `saber`, `firesaber`
+- **SIDH**: `sidhp434`, `sidhp503`, `sidhp610`, `sidhp751`
+- **SIKE**: `sikep434`, `sikep503`, `sikep610`, `sikep751`
+- **ThreeBears**: `babybear`, `babybear_ephem`, `mamabear`, `mamabear_ephem`, `papabear`, `papabear_ephem`
 
-The following hybrid algorithms are supported only for L1 schemes; they combine an L1 quantum-safe algorithm listed above with ECDH that uses NIST's P256 curve:
-- `p256_<KEX>`, where ``<KEX>`` is any one of the L1 algorithms listed above.
+The following hybrid algorithms are supported depending on the security of each scheme above, denoted by `<KEX>`:
+
+- If `<KEX>` has L1 security, the method `p256_<KEX>` is available, which combines `<KEX>`  with ECDH using NIST's P256 curve:
+- If `<KEX>` has L3 security, the method `p384_<KEX>` is available, which combines `<KEX>`  with ECDH using NIST's P384 curve:
+- If `<KEX>` has L5 security, the method `p521_<KEX>` is available, which combines `<KEX>`  with ECDH using NIST's P521 curve:
 
 #### Signatures
 

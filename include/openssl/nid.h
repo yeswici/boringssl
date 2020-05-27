@@ -4297,6 +4297,234 @@ extern "C" {
 #define NID_sphincs_haraka_128f_robust 976
 #define OBJ_sphincs_haraka_128f_robust 1L, 3L, 9999L, 3L, 1L
 
+#define SN_frodo640shake "frodo640shake"
+#define NID_frodo640shake 977
+
+#define SN_p256_frodo640shake "p256_frodo640shake"
+#define NID_p256_frodo640shake 978
+
+#define SN_frodo976aes "frodo976aes"
+#define NID_frodo976aes 979
+
+#define SN_p384_frodo976aes "p384_frodo976aes"
+#define NID_p384_frodo976aes 980
+
+#define SN_frodo976shake "frodo976shake"
+#define NID_frodo976shake 981
+
+#define SN_p384_frodo976shake "p384_frodo976shake"
+#define NID_p384_frodo976shake 982
+
+#define SN_frodo1344aes "frodo1344aes"
+#define NID_frodo1344aes 983
+
+#define SN_p521_frodo1344aes "p521_frodo1344aes"
+#define NID_p521_frodo1344aes 984
+
+#define SN_frodo1344shake "frodo1344shake"
+#define NID_frodo1344shake 985
+
+#define SN_p521_frodo1344shake "p521_frodo1344shake"
+#define NID_p521_frodo1344shake 986
+
+#define SN_bike1l3cpa "bike1l3cpa"
+#define NID_bike1l3cpa 989
+
+#define SN_p384_bike1l3cpa "p384_bike1l3cpa"
+#define NID_p384_bike1l3cpa 990
+
+#define SN_bike1l1fo "bike1l1fo"
+#define NID_bike1l1fo 991
+
+#define SN_p256_bike1l1fo "p256_bike1l1fo"
+#define NID_p256_bike1l1fo 992
+
+#define SN_bike1l3fo "bike1l3fo"
+#define NID_bike1l3fo 993
+
+#define SN_p384_bike1l3fo "p384_bike1l3fo"
+#define NID_p384_bike1l3fo 994
+
+#define SN_bike1l1cpa "bike1l1cpa"
+#define NID_bike1l1cpa 995
+
+#define SN_p256_bike1l1cpa "p256_bike1l1cpa"
+#define NID_p256_bike1l1cpa 996
+
+#define SN_kyber512 "kyber512"
+#define NID_kyber512 997
+
+#define SN_p256_kyber512 "p256_kyber512"
+#define NID_p256_kyber512 998
+
+#define SN_kyber768 "kyber768"
+#define NID_kyber768 999
+
+#define SN_p384_kyber768 "p384_kyber768"
+#define NID_p384_kyber768 1000
+
+#define SN_kyber1024 "kyber1024"
+#define NID_kyber1024 1001
+
+#define SN_p521_kyber1024 "p521_kyber1024"
+#define NID_p521_kyber1024 1002
+
+#define SN_kyber90s512 "kyber90s512"
+#define NID_kyber90s512 1003
+
+#define SN_p256_kyber90s512 "p256_kyber90s512"
+#define NID_p256_kyber90s512 1004
+
+#define SN_kyber90s768 "kyber90s768"
+#define NID_kyber90s768 1005
+
+#define SN_p384_kyber90s768 "p384_kyber90s768"
+#define NID_p384_kyber90s768 1006
+
+#define SN_kyber90s1024 "kyber90s1024"
+#define NID_kyber90s1024 1007
+
+#define SN_p521_kyber90s1024 "p521_kyber90s1024"
+#define NID_p521_kyber90s1024 1008
+
+#define SN_newhope512cca "newhope512cca"
+#define NID_newhope512cca 1009
+
+#define SN_p256_newhope512cca "p256_newhope512cca"
+#define NID_p256_newhope512cca 1010
+
+#define SN_newhope1024cca "newhope1024cca"
+#define NID_newhope1024cca 1011
+
+#define SN_p521_newhope1024cca "p521_newhope1024cca"
+#define NID_p521_newhope1024cca 1012
+
+#define SN_ntru_hps2048509 "ntru_hps2048509"
+#define NID_ntru_hps2048509 1013
+
+#define SN_p256_ntru_hps2048509 "p256_ntru_hps2048509"
+#define NID_p256_ntru_hps2048509 1014
+
+#define SN_ntru_hps2048677 "ntru_hps2048677"
+#define NID_ntru_hps2048677 1015
+
+#define SN_p384_ntru_hps2048677 "p384_ntru_hps2048677"
+#define NID_p384_ntru_hps2048677 1016
+
+#define SN_ntru_hps4096821 "ntru_hps4096821"
+#define NID_ntru_hps4096821 1017
+
+#define SN_p521_ntru_hps4096821 "p521_ntru_hps4096821"
+#define NID_p521_ntru_hps4096821 1018
+
+#define SN_ntru_hrss701 "ntru_hrss701"
+#define NID_ntru_hrss701 1019
+
+#define SN_p256_ntru_hrss701 "p256_ntru_hrss701"
+#define NID_p256_ntru_hrss701 1020
+
+#define SN_lightsaber "lightsaber"
+#define NID_lightsaber 1021
+
+#define SN_p256_lightsaber "p256_lightsaber"
+#define NID_p256_lightsaber 1022
+
+#define SN_saber "saber"
+#define NID_saber 1023
+
+#define SN_p384_saber "p384_saber"
+#define NID_p384_saber 1024
+
+#define SN_firesaber "firesaber"
+#define NID_firesaber 1025
+
+#define SN_p521_firesaber "p521_firesaber"
+#define NID_p521_firesaber 1026
+
+#define SN_sidhp434 "sidhp434"
+#define NID_sidhp434 1027
+
+#define SN_p256_sidhp434 "p256_sidhp434"
+#define NID_p256_sidhp434 1028
+
+#define SN_sidhp503 "sidhp503"
+#define NID_sidhp503 1029
+
+#define SN_p256_sidhp503 "p256_sidhp503"
+#define NID_p256_sidhp503 1030
+
+#define SN_sidhp610 "sidhp610"
+#define NID_sidhp610 1031
+
+#define SN_p384_sidhp610 "p384_sidhp610"
+#define NID_p384_sidhp610 1032
+
+#define SN_sidhp751 "sidhp751"
+#define NID_sidhp751 1033
+
+#define SN_p521_sidhp751 "p521_sidhp751"
+#define NID_p521_sidhp751 1034
+
+#define SN_sikep434 "sikep434"
+#define NID_sikep434 1035
+
+#define SN_p256_sikep434 "p256_sikep434"
+#define NID_p256_sikep434 1036
+
+#define SN_sikep503 "sikep503"
+#define NID_sikep503 1037
+
+#define SN_p256_sikep503 "p256_sikep503"
+#define NID_p256_sikep503 1038
+
+#define SN_sikep610 "sikep610"
+#define NID_sikep610 1039
+
+#define SN_p384_sikep610 "p384_sikep610"
+#define NID_p384_sikep610 1040
+
+#define SN_sikep751 "sikep751"
+#define NID_sikep751 1041
+
+#define SN_p521_sikep751 "p521_sikep751"
+#define NID_p521_sikep751 1042
+
+#define SN_babybear "babybear"
+#define NID_babybear 1043
+
+#define SN_p256_babybear "p256_babybear"
+#define NID_p256_babybear 1044
+
+#define SN_mamabear "mamabear"
+#define NID_mamabear 1045
+
+#define SN_p384_mamabear "p384_mamabear"
+#define NID_p384_mamabear 1046
+
+#define SN_papabear "papabear"
+#define NID_papabear 1047
+
+#define SN_p521_papabear "p521_papabear"
+#define NID_p521_papabear 1048
+
+#define SN_babybearephem "babybearephem"
+#define NID_babybearephem 1049
+
+#define SN_p256_babybearephem "p256_babybearephem"
+#define NID_p256_babybearephem 1050
+
+#define SN_mamabearephem "mamabearephem"
+#define NID_mamabearephem 1051
+
+#define SN_p384_mamabearephem "p384_mamabearephem"
+#define NID_p384_mamabearephem 1052
+
+#define SN_papabearephem "papabearephem"
+#define NID_papabearephem 1053
+
+#define SN_p521_papabearephem "p521_papabearephem"
+#define NID_p521_papabearephem 1054
+
 
 #if defined(__cplusplus)
 } /* extern C */

@@ -1,5 +1,5 @@
-# N.B: NIDS must match the curve IDs used
-# in OQS-OpenSSL 1.1.1 for interoperability.
+# N.B: For interoperability, NIDS must match the curve IDs used in
+# https://docs.google.com/spreadsheets/d/12YarzaNv3XQNLnvDsWLlRKwtZFhRrDdWf36YlzwrPeg/edit#gid=0
 kems:
   -
     name: 'oqs_kem_default'
@@ -7,11 +7,209 @@ kems:
     mix_with: [{'name': 'p256', 'mix_nid':'0x2FFF', 'nid':'SSL_CURVE_SECP256R1'}]
     oqs_meth: 'OQS_KEM_alg_default'
   -
+    name: 'bike1l1cpa'
+    nid: '0x0206'
+    mix_with: [{'name': 'p256', 'mix_nid':'0x2F06', 'nid':'SSL_CURVE_SECP256R1'}]
+    use_as_default_with: 'p256'
+    oqs_meth: 'OQS_KEM_alg_bike1_l1_cpa'
+  -
+    name: 'bike1l3cpa'
+    nid: '0x0207'
+    mix_with: [{'name': 'p384', 'mix_nid':'0x2F07', 'nid':'SSL_CURVE_SECP384R1'}]
+    oqs_meth: 'OQS_KEM_alg_bike1_l3_cpa'
+  -
+    name: 'bike1l1fo'
+    nid: '0x0223'
+    mix_with: [{'name': 'p256', 'mix_nid':'0x2F23', 'nid':'SSL_CURVE_SECP256R1'}]
+    oqs_meth: 'OQS_KEM_alg_bike1_l1_fo'
+  -
+    name: 'bike1l3fo'
+    nid: '0x0224'
+    mix_with: [{'name': 'p384', 'mix_nid':'0x2F24', 'nid':'SSL_CURVE_SECP384R1'}]
+    oqs_meth: 'OQS_KEM_alg_bike1_l3_fo'
+  -
     name: 'frodo640aes'
     nid: '0x0200'
     mix_with: [{'name': 'p256', 'mix_nid':'0x2F00', 'nid':'SSL_CURVE_SECP256R1'}]
     use_as_default_with: 'p256'
     oqs_meth: 'OQS_KEM_alg_frodokem_640_aes'
+  -
+    name: 'frodo640shake'
+    nid: '0x0201'
+    mix_with: [{'name': 'p256', 'mix_nid':'0x2F01', 'nid':'SSL_CURVE_SECP256R1'}]
+    oqs_meth: 'OQS_KEM_alg_frodokem_640_shake'
+  -
+    name: 'frodo976aes'
+    nid: '0x0202'
+    mix_with: [{'name': 'p384', 'mix_nid':'0x2F02', 'nid':'SSL_CURVE_SECP384R1'}]
+    oqs_meth: 'OQS_KEM_alg_frodokem_976_aes'
+  -
+    name: 'frodo976shake'
+    nid: '0x0203'
+    mix_with: [{'name': 'p384', 'mix_nid':'0x2F03', 'nid':'SSL_CURVE_SECP384R1'}]
+    oqs_meth: 'OQS_KEM_alg_frodokem_976_shake'
+  -
+    name: 'frodo1344aes'
+    nid: '0x0204'
+    mix_with: [{'name': 'p521', 'mix_nid':'0x2F04', 'nid':'SSL_CURVE_SECP521R1'}]
+    oqs_meth: 'OQS_KEM_alg_frodokem_1344_aes'
+  -
+    name: 'frodo1344shake'
+    nid: '0x0205'
+    mix_with: [{'name': 'p521', 'mix_nid':'0x2F05', 'nid':'SSL_CURVE_SECP521R1'}]
+    oqs_meth: 'OQS_KEM_alg_frodokem_1344_shake'
+  -
+    name: 'kyber512'
+    nid: '0x020F'
+    mix_with: [{'name': 'p256', 'mix_nid':'0x2F0F', 'nid':'SSL_CURVE_SECP256R1'}]
+    oqs_meth: 'OQS_KEM_alg_kyber_512'
+  -
+    name: 'kyber768'
+    nid: '0x0210'
+    mix_with: [{'name': 'p384', 'mix_nid':'0x2F10', 'nid':'SSL_CURVE_SECP384R1'}]
+    oqs_meth: 'OQS_KEM_alg_kyber_768'
+  -
+    name: 'kyber1024'
+    nid: '0x0211'
+    mix_with: [{'name': 'p521', 'mix_nid':'0x2F11', 'nid':'SSL_CURVE_SECP521R1'}]
+    oqs_meth: 'OQS_KEM_alg_kyber_1024'
+  -
+    name: 'kyber90s512'
+    nid: '0x0229'
+    mix_with: [{'name': 'p256', 'mix_nid':'0x2F29', 'nid':'SSL_CURVE_SECP256R1'}]
+    use_as_default_with: 'p256'
+    oqs_meth: 'OQS_KEM_alg_kyber_512_90s'
+  -
+    name: 'kyber90s768'
+    nid: '0x022A'
+    mix_with: [{'name': 'p384', 'mix_nid':'0x2F2A', 'nid':'SSL_CURVE_SECP384R1'}]
+    oqs_meth: 'OQS_KEM_alg_kyber_768_90s'
+  -
+    name: 'kyber90s1024'
+    nid: '0x022B'
+    mix_with: [{'name': 'p521', 'mix_nid':'0x2F2B', 'nid':'SSL_CURVE_SECP521R1'}]
+    oqs_meth: 'OQS_KEM_alg_kyber_1024_90s'
+  -
+    name: 'newhope512cca'
+    nid: '0x0212'
+    mix_with: [{'name': 'p256', 'mix_nid':'0x2F12', 'nid':'SSL_CURVE_SECP256R1'}]
+    use_as_default_with: 'p256'
+    oqs_meth: 'OQS_KEM_alg_newhope_512cca'
+  -
+    name: 'newhope1024cca'
+    nid: '0x0213'
+    mix_with: [{'name': 'p521', 'mix_nid':'0x2F13', 'nid':'SSL_CURVE_SECP521R1'}]
+    oqs_meth: 'OQS_KEM_alg_newhope_1024cca'
+  -
+    name: 'ntru_hps2048509'
+    nid: '0x0214'
+    mix_with: [{'name': 'p256', 'mix_nid':'0x2F14', 'nid':'SSL_CURVE_SECP256R1'}]
+    use_as_default_with: 'p256'
+    oqs_meth: 'OQS_KEM_alg_ntru_hps2048509'
+  -
+    name: 'ntru_hps2048677'
+    nid: '0x0215'
+    mix_with: [{'name': 'p384', 'mix_nid':'0x2F15', 'nid':'SSL_CURVE_SECP384R1'}]
+    oqs_meth: 'OQS_KEM_alg_ntru_hps2048677'
+  -
+    name: 'ntru_hps4096821'
+    nid: '0x0216'
+    mix_with: [{'name': 'p521', 'mix_nid':'0x2F16', 'nid':'SSL_CURVE_SECP521R1'}]
+    oqs_meth: 'OQS_KEM_alg_ntru_hps4096821'
+  -
+    name: 'ntru_hrss701'
+    nid: '0x0217'
+    mix_with: [{'name': 'p256', 'mix_nid':'0x2F17', 'nid':'SSL_CURVE_SECP256R1'}]
+    oqs_meth: 'OQS_KEM_alg_ntru_hrss701'
+  -
+    name: 'lightsaber'
+    nid: '0x0218'
+    mix_with: [{'name': 'p256', 'mix_nid':'0x2F18', 'nid':'SSL_CURVE_SECP256R1'}]
+    use_as_default_with: 'p256'
+    oqs_meth: 'OQS_KEM_alg_saber_lightsaber'
+  -
+    name: 'saber'
+    nid: '0x0219'
+    mix_with: [{'name': 'p384', 'mix_nid':'0x2F19', 'nid':'SSL_CURVE_SECP384R1'}]
+    oqs_meth: 'OQS_KEM_alg_saber_saber'
+  -
+    name: 'firesaber'
+    nid: '0x021A'
+    mix_with: [{'name': 'p521', 'mix_nid':'0x2F1A', 'nid':'SSL_CURVE_SECP521R1'}]
+    oqs_meth: 'OQS_KEM_alg_saber_firesaber'
+  -
+    name: 'sidhp434'
+    nid: '0x021B'
+    mix_with: [{'name': 'p256', 'mix_nid':'0x2F1B', 'nid':'SSL_CURVE_SECP256R1'}]
+    use_as_default_with: 'p256'
+    oqs_meth: 'OQS_KEM_alg_sidh_p434'
+  -
+    name: 'sidhp503'
+    nid: '0x021C'
+    mix_with: [{'name': 'p256', 'mix_nid':'0x2F1C', 'nid':'SSL_CURVE_SECP256R1'}]
+    oqs_meth: 'OQS_KEM_alg_sidh_p503'
+  -
+    name: 'sidhp610'
+    nid: '0x021D'
+    mix_with: [{'name': 'p384', 'mix_nid':'0x2F1D', 'nid':'SSL_CURVE_SECP384R1'}]
+    oqs_meth: 'OQS_KEM_alg_sidh_p610'
+  -
+    name: 'sidhp751'
+    nid: '0x021E'
+    mix_with: [{'name': 'p521', 'mix_nid':'0x2F1E', 'nid':'SSL_CURVE_SECP521R1'}]
+    oqs_meth: 'OQS_KEM_alg_sidh_p751'
+  -
+    name: 'sikep434'
+    nid: '0x021F'
+    mix_with: [{'name': 'p256', 'mix_nid':'0x2F1F', 'nid':'SSL_CURVE_SECP256R1'}]
+    use_as_default_with: 'p256'
+    oqs_meth: 'OQS_KEM_alg_sike_p434'
+  -
+    name: 'sikep503'
+    nid: '0x0220'
+    mix_with: [{'name': 'p256', 'mix_nid':'0x2F20', 'nid':'SSL_CURVE_SECP256R1'}]
+    oqs_meth: 'OQS_KEM_alg_sike_p503'
+  -
+    name: 'sikep610'
+    nid: '0x0221'
+    mix_with: [{'name': 'p384', 'mix_nid':'0x2F21', 'nid':'SSL_CURVE_SECP384R1'}]
+    oqs_meth: 'OQS_KEM_alg_sike_p610'
+  -
+    name: 'sikep751'
+    nid: '0x0222'
+    mix_with: [{'name': 'p521', 'mix_nid':'0x2F22', 'nid':'SSL_CURVE_SECP521R1'}]
+    oqs_meth: 'OQS_KEM_alg_sike_p751'
+  -
+    name: 'babybear'
+    nid: '0x022C'
+    mix_with: [{'name': 'p256', 'mix_nid':'0x2F2C', 'nid':'SSL_CURVE_SECP256R1'}]
+    use_as_default_with: 'p256'
+    oqs_meth: 'OQS_KEM_alg_threebears_babybear'
+  -
+    name: 'mamabear'
+    nid: '0x022D'
+    mix_with: [{'name': 'p384', 'mix_nid':'0x2F2D', 'nid':'SSL_CURVE_SECP384R1'}]
+    oqs_meth: 'OQS_KEM_alg_threebears_mamabear'
+  -
+    name: 'papabear'
+    nid: '0x022E'
+    mix_with: [{'name': 'p521', 'mix_nid':'0x2F2E', 'nid':'SSL_CURVE_SECP521R1'}]
+    oqs_meth: 'OQS_KEM_alg_threebears_papabear'
+  -
+    name: 'babybearephem'
+    nid: '0x022F'
+    mix_with: [{'name': 'p256', 'mix_nid':'0x2F2F', 'nid':'SSL_CURVE_SECP256R1'}]
+    oqs_meth: 'OQS_KEM_alg_threebears_babybear_ephem'
+  -
+    name: 'mamabearephem'
+    nid: '0x0230'
+    mix_with: [{'name': 'p384', 'mix_nid':'0x2F30', 'nid':'SSL_CURVE_SECP384R1'}]
+    oqs_meth: 'OQS_KEM_alg_threebears_mamabear_ephem'
+  -
+    name: 'papabearephem'
+    nid: '0x0231'
+    mix_with: [{'name': 'p521', 'mix_nid':'0x2F31', 'nid':'SSL_CURVE_SECP521R1'}]
+    oqs_meth: 'OQS_KEM_alg_threebears_papabear_ephem'
 
 # N.B: Code points and OIDs must match those used
 # in OQS-OpenSSL 1.1.1 for interoperability.
