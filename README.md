@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 [![CircleCI](https://circleci.com/gh/open-quantum-safe/boringssl/tree/master.svg?style=svg)](https://circleci.com/gh/open-quantum-safe/boringssl/tree/master)
 
 OQS-BoringSSL
@@ -167,9 +168,9 @@ tool/bssl client -curves <KEX> -connect localhost:4433
 
 ## API Stability
 
-As previously noted, the BoringSSL project does not guarantee API or ABI stability; this fork is maintained primarily to enable the use of quantum-safe cryptography in the [Chromium](https://www.chromium.org/) and [quiche](https://github.com/cloudflare/quiche) projects, both of which rely on BoringSSL's TLS implementation.
+As previously noted, the BoringSSL project does not guarantee API or ABI stability; this fork is maintained primarily to enable the use of quantum-safe cryptography in the [Chromium](https://www.chromium.org/) web browser, which relies on BoringSSL's TLS implementation.
 
-This fork is currently based on commit hash `d041f11134951ea34c549032d20d041112697e4c`. If we do decide to update, we will do so to the most recent BoringSSL commit that is supported by the desired commits at which we would like Chromium and quiche to be. We consequently also cannot guarantee API or ABI stability for this fork.
+This fork is currently based on commit hash `78b3337a10a7f7b3495b6cb8140a74e265290898` based on Chromium tag `85.0.4161.2`. If we do decide to update, we will do so to the most recent BoringSSL commit that is supported by the desired tag at which we would like Chromium to be. We consequently also cannot guarantee API or ABI stability for this fork.
 
 ## Team
 

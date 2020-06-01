@@ -13,9 +13,9 @@
  * CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE. */
 
 #include <algorithm>
-#include <string>
 #include <functional>
 #include <memory>
+#include <string>
 #include <vector>
 
 #include <assert.h>
@@ -25,6 +25,7 @@
 #include <string.h>
 
 #include <openssl/aead.h>
+#include <openssl/aes.h>
 #include <openssl/bn.h>
 #include <openssl/curve25519.h>
 #include <openssl/digest.h>
@@ -34,9 +35,11 @@
 #include <openssl/ec_key.h>
 #include <openssl/evp.h>
 #include <openssl/hrss.h>
+#include <openssl/mem.h>
 #include <openssl/nid.h>
 #include <openssl/rand.h>
 #include <openssl/rsa.h>
+#include <openssl/trust_token.h>
 
 #if defined(OPENSSL_WINDOWS)
 OPENSSL_MSVC_PRAGMA(warning(push, 3))
@@ -48,11 +51,14 @@ OPENSSL_MSVC_PRAGMA(warning(pop))
 #include <time.h>
 #endif
 
+#include "../crypto/ec_extra/internal.h"
+#include "../crypto/fipsmodule/ec/internal.h"
 #include "../crypto/internal.h"
+#include "../crypto/trust_token/internal.h"
 #include "internal.h"
 
-#include "../third_party/sike/sike.h"
-
+// g_print_json is true if printed output is JSON formatted.
+static bool g_print_json = false;
 
 // TimeResults represents the results of benchmarking a function.
 struct TimeResults {
@@ -61,19 +67,53 @@ struct TimeResults {
   // us is the number of microseconds that elapsed in the time period.
   unsigned us;
 
-  void Print(const std::string &description) {
-    printf("Did %u %s operations in %uus (%.1f ops/sec)\n", num_calls,
-           description.c_str(), us,
-           (static_cast<double>(num_calls) / us) * 1000000);
+  void Print(const std::string &description) const {
+    if (g_print_json) {
+      PrintJSON(description);
+    } else {
+      printf("Did %u %s operations in %uus (%.1f ops/sec)\n", num_calls,
+             description.c_str(), us,
+             (static_cast<double>(num_calls) / us) * 1000000);
+    }
   }
 
-  void PrintWithBytes(const std::string &description, size_t bytes_per_call) {
-    printf("Did %u %s operations in %uus (%.1f ops/sec): %.1f MB/s\n",
-           num_calls, description.c_str(), us,
-           (static_cast<double>(num_calls) / us) * 1000000,
-           static_cast<double>(bytes_per_call * num_calls) / us);
+  void PrintWithBytes(const std::string &description,
+                      size_t bytes_per_call) const {
+    if (g_print_json) {
+      PrintJSON(description, bytes_per_call);
+    } else {
+      printf("Did %u %s operations in %uus (%.1f ops/sec): %.1f MB/s\n",
+             num_calls, description.c_str(), us,
+             (static_cast<double>(num_calls) / us) * 1000000,
+             static_cast<double>(bytes_per_call * num_calls) / us);
+    }
   }
+
+ private:
+  void PrintJSON(const std::string &description,
+                 size_t bytes_per_call = 0) const {
+    if (first_json_printed) {
+      puts(",");
+    }
+
+    printf("{\"description\": \"%s\", \"numCalls\": %u, \"microseconds\": %u",
+           description.c_str(), num_calls, us);
+
+    if (bytes_per_call > 0) {
+      printf(", \"bytesPerCall\": %zu", bytes_per_call);
+    }
+
+    printf("}");
+    first_json_printed = true;
+  }
+
+  // first_json_printed is true if |g_print_json| is true and the first item in
+  // the JSON results has been printed already. This is used to handle the
+  // commas between each item in the result list.
+  static bool first_json_printed;
 };
+
+bool TimeResults::first_json_printed = false;
 
 #if defined(OPENSSL_WINDOWS)
 static uint64_t time_now() { return GetTickCount64() * 1000; }
@@ -273,84 +313,31 @@ static bool SpeedRSAKeyGen(const std::string &selected) {
     }
 
     std::sort(durations.begin(), durations.end());
-    printf("Did %u RSA %d key-gen operations in %uus (%.1f ops/sec)\n",
-           num_calls, size, us,
-           (static_cast<double>(num_calls) / us) * 1000000);
+    const std::string description =
+        std::string("RSA ") + std::to_string(size) + std::string(" key-gen");
+    const TimeResults results = {num_calls, us};
+    results.Print(description);
     const size_t n = durations.size();
     assert(n > 0);
 
-    // |min| and |max| must be stored in temporary variables to avoid an MSVC
-    // bug on x86. There, size_t is a typedef for unsigned, but MSVC's printf
-    // warning tries to retain the distinction and suggest %zu for size_t
-    // instead of %u. It gets confused if std::vector<unsigned> and
-    // std::vector<size_t> are both instantiated. Being typedefs, the two
-    // instantiations are identical, which somehow breaks the size_t vs unsigned
-    // metadata.
-    unsigned min = durations[0];
-    unsigned median = n & 1 ? durations[n / 2]
-                            : (durations[n / 2 - 1] + durations[n / 2]) / 2;
-    unsigned max = durations[n - 1];
-    printf("  min: %uus, median: %uus, max: %uus\n", min, median, max);
+    // Distribution information is useful, but doesn't fit into the standard
+    // format used by |g_print_json|.
+    if (!g_print_json) {
+      // |min| and |max| must be stored in temporary variables to avoid an MSVC
+      // bug on x86. There, size_t is a typedef for unsigned, but MSVC's printf
+      // warning tries to retain the distinction and suggest %zu for size_t
+      // instead of %u. It gets confused if std::vector<unsigned> and
+      // std::vector<size_t> are both instantiated. Being typedefs, the two
+      // instantiations are identical, which somehow breaks the size_t vs
+      // unsigned metadata.
+      unsigned min = durations[0];
+      unsigned median = n & 1 ? durations[n / 2]
+                              : (durations[n / 2 - 1] + durations[n / 2]) / 2;
+      unsigned max = durations[n - 1];
+      printf("  min: %uus, median: %uus, max: %uus\n", min, median, max);
+    }
   }
 
-  return true;
-}
-
-static bool SpeedSIKEP434(const std::string &selected) {
-  if (!selected.empty() && selected.find("SIKE") == std::string::npos) {
-    return true;
-  }
-  // speed generation
-  uint8_t public_SIKE[SIKE_PUB_BYTESZ];
-  uint8_t private_SIKE[SIKE_PRV_BYTESZ];
-  uint8_t ct[SIKE_CT_BYTESZ];
-  bool res;
-
-  {
-    TimeResults results;
-    res = TimeFunction(&results,
-                [&private_SIKE, &public_SIKE]() -> bool {
-      return (SIKE_keypair(private_SIKE, public_SIKE) == 1);
-    });
-    results.Print("SIKE/P434 generate");
-  }
-
-  if (!res) {
-    fprintf(stderr, "Failed to time SIKE_keypair.\n");
-    return false;
-  }
-
-  {
-    TimeResults results;
-    TimeFunction(&results,
-                [&ct, &public_SIKE]() -> bool {
-      uint8_t ss[SIKE_SS_BYTESZ];
-      SIKE_encaps(ss, ct, public_SIKE);
-      return true;
-    });
-    results.Print("SIKE/P434 encap");
-  }
-
-  if (!res) {
-    fprintf(stderr, "Failed to time SIKE_encaps.\n");
-    return false;
-  }
-
-  {
-    TimeResults results;
-    TimeFunction(&results,
-                [&ct, &public_SIKE, &private_SIKE]() -> bool {
-      uint8_t ss[SIKE_SS_BYTESZ];
-      SIKE_decaps(ss, ct, public_SIKE, private_SIKE);
-      return true;
-    });
-    results.Print("SIKE/P434 decap");
-  }
-
-  if (!res) {
-    fprintf(stderr, "Failed to time SIKE_decaps.\n");
-    return false;
-  }
   return true;
 }
 
@@ -492,6 +479,75 @@ static bool SpeedAEADOpen(const EVP_AEAD *aead, const std::string &name,
   return true;
 }
 
+static bool SpeedAESBlock(const std::string &name, unsigned bits,
+                          const std::string &selected) {
+  if (!selected.empty() && name.find(selected) == std::string::npos) {
+    return true;
+  }
+
+  static const uint8_t kZero[32] = {0};
+
+  {
+    TimeResults results;
+    if (!TimeFunction(&results, [&]() -> bool {
+          AES_KEY key;
+          return AES_set_encrypt_key(kZero, bits, &key) == 0;
+        })) {
+      fprintf(stderr, "AES_set_encrypt_key failed.\n");
+      return false;
+    }
+    results.Print(name + " encrypt setup");
+  }
+
+  {
+    AES_KEY key;
+    if (AES_set_encrypt_key(kZero, bits, &key) != 0) {
+      return false;
+    }
+    uint8_t block[16] = {0};
+    TimeResults results;
+    if (!TimeFunction(&results, [&]() -> bool {
+          AES_encrypt(block, block, &key);
+          return true;
+        })) {
+      fprintf(stderr, "AES_encrypt failed.\n");
+      return false;
+    }
+    results.Print(name + " encrypt");
+  }
+
+  {
+    TimeResults results;
+    if (!TimeFunction(&results, [&]() -> bool {
+          AES_KEY key;
+          return AES_set_decrypt_key(kZero, bits, &key) == 0;
+        })) {
+      fprintf(stderr, "AES_set_decrypt_key failed.\n");
+      return false;
+    }
+    results.Print(name + " decrypt setup");
+  }
+
+  {
+    AES_KEY key;
+    if (AES_set_decrypt_key(kZero, bits, &key) != 0) {
+      return false;
+    }
+    uint8_t block[16] = {0};
+    TimeResults results;
+    if (!TimeFunction(&results, [&]() -> bool {
+          AES_decrypt(block, block, &key);
+          return true;
+        })) {
+      fprintf(stderr, "AES_decrypt failed.\n");
+      return false;
+    }
+    results.Print(name + " decrypt");
+  }
+
+  return true;
+}
+
 static bool SpeedHashChunk(const EVP_MD *md, std::string name,
                            size_t chunk_len) {
   bssl::ScopedEVP_MD_CTX ctx;
@@ -606,17 +662,14 @@ static bool SpeedECDHCurve(const std::string &name, int nid,
         bssl::UniquePtr<EC_POINT> point(EC_POINT_new(group));
         bssl::UniquePtr<EC_POINT> peer_point(EC_POINT_new(group));
         bssl::UniquePtr<BN_CTX> ctx(BN_CTX_new());
-
         bssl::UniquePtr<BIGNUM> x(BN_new());
-        bssl::UniquePtr<BIGNUM> y(BN_new());
-
-        if (!point || !peer_point || !ctx || !x || !y ||
+        if (!point || !peer_point || !ctx || !x ||
             !EC_POINT_oct2point(group, peer_point.get(), peer_value.get(),
                                 peer_value_len, ctx.get()) ||
-            !EC_POINT_mul(group, point.get(), NULL, peer_point.get(),
+            !EC_POINT_mul(group, point.get(), nullptr, peer_point.get(),
                           EC_KEY_get0_private_key(key.get()), ctx.get()) ||
             !EC_POINT_get_affine_coordinates_GFp(group, point.get(), x.get(),
-                                                 y.get(), ctx.get())) {
+                                                 nullptr, ctx.get())) {
           return false;
         }
 
@@ -891,6 +944,306 @@ static bool SpeedHRSS(const std::string &selected) {
   return true;
 }
 
+static bool SpeedHashToCurve(const std::string &selected) {
+  if (!selected.empty() && selected.find("hashtocurve") == std::string::npos) {
+    return true;
+  }
+
+  uint8_t input[64];
+  RAND_bytes(input, sizeof(input));
+
+  static const uint8_t kLabel[] = "label";
+
+  TimeResults results;
+  {
+    EC_GROUP *group = EC_GROUP_new_by_curve_name(NID_secp521r1);
+    if (group == NULL) {
+      return false;
+    }
+    if (!TimeFunction(&results, [&]() -> bool {
+          EC_RAW_POINT out;
+          return ec_hash_to_curve_p521_xmd_sha512_sswu_draft06(
+              group, &out, kLabel, sizeof(kLabel), input, sizeof(input));
+        })) {
+      fprintf(stderr, "hash-to-curve failed.\n");
+      return false;
+    }
+    results.Print("hash-to-curve P521_XMD:SHA-512_SSWU_RO_");
+
+    if (!TimeFunction(&results, [&]() -> bool {
+          EC_SCALAR out;
+          return ec_hash_to_scalar_p521_xmd_sha512_draft06(
+              group, &out, kLabel, sizeof(kLabel), input, sizeof(input));
+        })) {
+      fprintf(stderr, "hash-to-scalar failed.\n");
+      return false;
+    }
+    results.Print("hash-to-scalar P521_XMD:SHA-512");
+  }
+
+  {
+    EC_GROUP *group = EC_GROUP_new_by_curve_name(NID_secp384r1);
+    if (group == NULL) {
+      return false;
+    }
+    if (!TimeFunction(&results, [&]() -> bool {
+          EC_RAW_POINT out;
+          return ec_hash_to_curve_p384_xmd_sha512_sswu_draft07(
+              group, &out, kLabel, sizeof(kLabel), input, sizeof(input));
+        })) {
+      fprintf(stderr, "hash-to-curve failed.\n");
+      return false;
+    }
+    results.Print("hash-to-curve P384_XMD:SHA-512_SSWU_RO_");
+
+    if (!TimeFunction(&results, [&]() -> bool {
+          EC_SCALAR out;
+          return ec_hash_to_scalar_p384_xmd_sha512_draft07(
+              group, &out, kLabel, sizeof(kLabel), input, sizeof(input));
+        })) {
+      fprintf(stderr, "hash-to-scalar failed.\n");
+      return false;
+    }
+    results.Print("hash-to-scalar P384_XMD:SHA-512");
+  }
+
+  return true;
+}
+
+static PMBTOKEN_PRETOKEN *pmbtoken_pretoken_dup(PMBTOKEN_PRETOKEN *in) {
+  PMBTOKEN_PRETOKEN *out =
+      (PMBTOKEN_PRETOKEN *)OPENSSL_malloc(sizeof(PMBTOKEN_PRETOKEN));
+  if (out) {
+    OPENSSL_memcpy(out, in, sizeof(PMBTOKEN_PRETOKEN));
+  }
+  return out;
+}
+
+static bool SpeedTrustToken(std::string name, const TRUST_TOKEN_METHOD *method,
+                            size_t batchsize, const std::string &selected) {
+  if (!selected.empty() && selected.find("trusttoken") == std::string::npos) {
+    return true;
+  }
+
+  TimeResults results;
+  if (!TimeFunction(&results, [&]() -> bool {
+        uint8_t priv_key[TRUST_TOKEN_MAX_PRIVATE_KEY_SIZE];
+        uint8_t pub_key[TRUST_TOKEN_MAX_PUBLIC_KEY_SIZE];
+        size_t priv_key_len, pub_key_len;
+        return TRUST_TOKEN_generate_key(
+            method, priv_key, &priv_key_len, TRUST_TOKEN_MAX_PRIVATE_KEY_SIZE,
+            pub_key, &pub_key_len, TRUST_TOKEN_MAX_PUBLIC_KEY_SIZE, 0);
+      })) {
+    fprintf(stderr, "TRUST_TOKEN_generate_key failed.\n");
+    return false;
+  }
+  results.Print(name + " generate_key");
+
+  bssl::UniquePtr<TRUST_TOKEN_CLIENT> client(
+      TRUST_TOKEN_CLIENT_new(method, batchsize));
+  bssl::UniquePtr<TRUST_TOKEN_ISSUER> issuer(
+      TRUST_TOKEN_ISSUER_new(method, batchsize));
+  uint8_t priv_key[TRUST_TOKEN_MAX_PRIVATE_KEY_SIZE];
+  uint8_t pub_key[TRUST_TOKEN_MAX_PUBLIC_KEY_SIZE];
+  size_t priv_key_len, pub_key_len, key_index;
+  if (!client || !issuer ||
+      !TRUST_TOKEN_generate_key(
+          method, priv_key, &priv_key_len, TRUST_TOKEN_MAX_PRIVATE_KEY_SIZE,
+          pub_key, &pub_key_len, TRUST_TOKEN_MAX_PUBLIC_KEY_SIZE, 0) ||
+      !TRUST_TOKEN_CLIENT_add_key(client.get(), &key_index, pub_key,
+                                  pub_key_len) ||
+      !TRUST_TOKEN_ISSUER_add_key(issuer.get(), priv_key, priv_key_len)) {
+    fprintf(stderr, "failed to generate trust token key.\n");
+    return false;
+  }
+
+  uint8_t public_key[32], private_key[64];
+  ED25519_keypair(public_key, private_key);
+  bssl::UniquePtr<EVP_PKEY> priv(
+      EVP_PKEY_new_raw_private_key(EVP_PKEY_ED25519, nullptr, private_key, 32));
+  bssl::UniquePtr<EVP_PKEY> pub(
+      EVP_PKEY_new_raw_public_key(EVP_PKEY_ED25519, nullptr, public_key, 32));
+  if (!priv || !pub) {
+    fprintf(stderr, "failed to generate trust token SRR key.\n");
+    return false;
+  }
+
+  TRUST_TOKEN_CLIENT_set_srr_key(client.get(), pub.get());
+  TRUST_TOKEN_ISSUER_set_srr_key(issuer.get(), priv.get());
+  uint8_t metadata_key[32];
+  RAND_bytes(metadata_key, sizeof(metadata_key));
+  if (!TRUST_TOKEN_ISSUER_set_metadata_key(issuer.get(), metadata_key,
+                                           sizeof(metadata_key))) {
+    fprintf(stderr, "failed to generate trust token metadata key.\n");
+    return false;
+  }
+
+  if (!TimeFunction(&results, [&]() -> bool {
+        uint8_t *issue_msg = NULL;
+        size_t msg_len;
+        int ok = TRUST_TOKEN_CLIENT_begin_issuance(client.get(), &issue_msg,
+                                                   &msg_len, batchsize);
+        OPENSSL_free(issue_msg);
+        // Clear pretokens.
+        sk_PMBTOKEN_PRETOKEN_pop_free(client->pretokens,
+                                      PMBTOKEN_PRETOKEN_free);
+        client->pretokens = sk_PMBTOKEN_PRETOKEN_new_null();
+        return ok;
+      })) {
+    fprintf(stderr, "TRUST_TOKEN_CLIENT_begin_issuance failed.\n");
+    return false;
+  }
+  results.Print(name + " begin_issuance");
+
+  uint8_t *issue_msg = NULL;
+  size_t msg_len;
+  if (!TRUST_TOKEN_CLIENT_begin_issuance(client.get(), &issue_msg, &msg_len,
+                                         batchsize)) {
+    fprintf(stderr, "TRUST_TOKEN_CLIENT_begin_issuance failed.\n");
+    return false;
+  }
+  bssl::UniquePtr<uint8_t> free_issue_msg(issue_msg);
+
+  bssl::UniquePtr<STACK_OF(PMBTOKEN_PRETOKEN)> pretokens(
+      sk_PMBTOKEN_PRETOKEN_deep_copy(client->pretokens, pmbtoken_pretoken_dup,
+                                     PMBTOKEN_PRETOKEN_free));
+
+  if (!TimeFunction(&results, [&]() -> bool {
+        uint8_t *issue_resp = NULL;
+        size_t resp_len, tokens_issued;
+        int ok = TRUST_TOKEN_ISSUER_issue(issuer.get(), &issue_resp, &resp_len,
+                                          &tokens_issued, issue_msg, msg_len,
+                                          /*public_metadata=*/0,
+                                          /*private_metadata=*/0,
+                                          /*max_issuance=*/batchsize);
+        OPENSSL_free(issue_resp);
+        return ok;
+      })) {
+    fprintf(stderr, "TRUST_TOKEN_ISSUER_issue failed.\n");
+    return false;
+  }
+  results.Print(name + " issue");
+
+  uint8_t *issue_resp = NULL;
+  size_t resp_len, tokens_issued;
+  if (!TRUST_TOKEN_ISSUER_issue(issuer.get(), &issue_resp, &resp_len,
+                                &tokens_issued, issue_msg, msg_len,
+                                /*public_metadata=*/0, /*private_metadata=*/0,
+                                /*max_issuance=*/batchsize)) {
+    fprintf(stderr, "TRUST_TOKEN_ISSUER_issue failed.\n");
+    return false;
+  }
+  bssl::UniquePtr<uint8_t> free_issue_resp(issue_resp);
+
+  if (!TimeFunction(&results, [&]() -> bool {
+        size_t key_index2;
+        bssl::UniquePtr<STACK_OF(TRUST_TOKEN)> tokens(
+            TRUST_TOKEN_CLIENT_finish_issuance(client.get(), &key_index2,
+                                               issue_resp, resp_len));
+
+        // Reset pretokens.
+        client->pretokens = sk_PMBTOKEN_PRETOKEN_deep_copy(
+            pretokens.get(), pmbtoken_pretoken_dup, PMBTOKEN_PRETOKEN_free);
+        return !!tokens;
+      })) {
+    fprintf(stderr, "TRUST_TOKEN_CLIENT_finish_issuance failed.\n");
+    return false;
+  }
+  results.Print(name + " finish_issuance");
+
+  bssl::UniquePtr<STACK_OF(TRUST_TOKEN)> tokens(
+      TRUST_TOKEN_CLIENT_finish_issuance(client.get(), &key_index, issue_resp,
+                                         resp_len));
+  if (!tokens || sk_TRUST_TOKEN_num(tokens.get()) < 1) {
+    fprintf(stderr, "TRUST_TOKEN_CLIENT_finish_issuance failed.\n");
+    return false;
+  }
+
+  const TRUST_TOKEN *token = sk_TRUST_TOKEN_value(tokens.get(), 0);
+
+  const uint8_t kClientData[] = "\x70TEST CLIENT DATA";
+  uint64_t kRedemptionTime = 13374242;
+
+  if (!TimeFunction(&results, [&]() -> bool {
+        uint8_t *redeem_msg = NULL;
+        size_t redeem_msg_len;
+        int ok = TRUST_TOKEN_CLIENT_begin_redemption(
+            client.get(), &redeem_msg, &redeem_msg_len, token, kClientData,
+            sizeof(kClientData) - 1, kRedemptionTime);
+        OPENSSL_free(redeem_msg);
+        return ok;
+      })) {
+    fprintf(stderr, "TRUST_TOKEN_CLIENT_begin_redemption failed.\n");
+    return false;
+  }
+  results.Print(name + " begin_redemption");
+
+  uint8_t *redeem_msg = NULL;
+  size_t redeem_msg_len;
+  if (!TRUST_TOKEN_CLIENT_begin_redemption(
+          client.get(), &redeem_msg, &redeem_msg_len, token, kClientData,
+          sizeof(kClientData) - 1, kRedemptionTime)) {
+    fprintf(stderr, "TRUST_TOKEN_CLIENT_begin_redemption failed.\n");
+    return false;
+  }
+  bssl::UniquePtr<uint8_t> free_redeem_msg(redeem_msg);
+
+  if (!TimeFunction(&results, [&]() -> bool {
+        uint8_t *redeem_resp = NULL;
+        size_t redeem_resp_len;
+        TRUST_TOKEN *rtoken = NULL;
+        uint8_t *client_data = NULL;
+        size_t client_data_len;
+        uint64_t redemption_time;
+        int ok = TRUST_TOKEN_ISSUER_redeem(
+            issuer.get(), &redeem_resp, &redeem_resp_len, &rtoken, &client_data,
+            &client_data_len, &redemption_time, redeem_msg, redeem_msg_len,
+            /*lifetime=*/600);
+        OPENSSL_free(redeem_resp);
+        OPENSSL_free(client_data);
+        TRUST_TOKEN_free(rtoken);
+        return ok;
+      })) {
+    fprintf(stderr, "TRUST_TOKEN_ISSUER_redeem failed.\n");
+    return false;
+  }
+  results.Print(name + " redeem");
+
+  uint8_t *redeem_resp = NULL;
+  size_t redeem_resp_len;
+  TRUST_TOKEN *rtoken = NULL;
+  uint8_t *client_data = NULL;
+  size_t client_data_len;
+  uint64_t redemption_time;
+  if (!TRUST_TOKEN_ISSUER_redeem(issuer.get(), &redeem_resp, &redeem_resp_len,
+                                 &rtoken, &client_data, &client_data_len,
+                                 &redemption_time, redeem_msg, redeem_msg_len,
+                                 /*lifetime=*/600)) {
+    fprintf(stderr, "TRUST_TOKEN_ISSUER_redeem failed.\n");
+    return false;
+  }
+  bssl::UniquePtr<uint8_t> free_redeem_resp(redeem_resp);
+  bssl::UniquePtr<uint8_t> free_client_data(client_data);
+  bssl::UniquePtr<TRUST_TOKEN> free_rtoken(rtoken);
+
+  if (!TimeFunction(&results, [&]() -> bool {
+        uint8_t *srr = NULL, *sig = NULL;
+        size_t srr_len, sig_len;
+        int ok = TRUST_TOKEN_CLIENT_finish_redemption(client.get(), &srr,
+                                                      &srr_len, &sig, &sig_len,
+                                                      redeem_resp, resp_len);
+        OPENSSL_free(srr);
+        OPENSSL_free(sig);
+        return ok;
+      })) {
+    fprintf(stderr, "TRUST_TOKEN_CLIENT_finish_redemption failed.\n");
+    return false;
+  }
+  results.Print(name + " finish_redemption");
+
+  return true;
+}
+
 static const struct argument kArguments[] = {
     {
         "-filter",
@@ -909,6 +1262,16 @@ static const struct argument kArguments[] = {
         "16,256,1350,8192,16384)",
     },
     {
+        "-json",
+        kBooleanArgument,
+        "If this flag is set, speed will print the output of each benchmark in "
+        "JSON format as follows: \"{\"description\": "
+        "\"descriptionOfOperation\", \"numCalls\": 1234, "
+        "\"timeInMicroseconds\": 1234567, \"bytesPerCall\": 1234}\". When "
+        "there is no information about the bytes per call for an  operation, "
+        "the JSON field for bytesPerCall will be omitted.",
+    },
+    {
         "",
         kOptionalArgument,
         "",
@@ -925,6 +1288,10 @@ bool Speed(const std::vector<std::string> &args) {
   std::string selected;
   if (args_map.count("-filter") != 0) {
     selected = args_map["-filter"];
+  }
+
+  if (args_map.count("-json") != 0) {
+    g_print_json = true;
   }
 
   if (args_map.count("-timeout") != 0) {
@@ -966,6 +1333,9 @@ bool Speed(const std::vector<std::string> &args) {
   // knowledge in them and construct a couple of the AD bytes internally.
   static const size_t kLegacyADLen = kTLSADLen - 2;
 
+  if (g_print_json) {
+    puts("[");
+  }
   if (!SpeedRSA(selected) ||
       !SpeedAEAD(EVP_aead_aes_128_gcm(), "AES-128-GCM", kTLSADLen, selected) ||
       !SpeedAEAD(EVP_aead_aes_256_gcm(), "AES-256-GCM", kTLSADLen, selected) ||
@@ -991,6 +1361,8 @@ bool Speed(const std::vector<std::string> &args) {
                      selected) ||
       !SpeedAEAD(EVP_aead_aes_128_ccm_bluetooth(), "AES-128-CCM-Bluetooth",
                  kTLSADLen, selected) ||
+      !SpeedAESBlock("AES-128", 128, selected) ||
+      !SpeedAESBlock("AES-256", 256, selected) ||
       !SpeedHash(EVP_sha1(), "SHA-1", selected) ||
       !SpeedHash(EVP_sha256(), "SHA-256", selected) ||
       !SpeedHash(EVP_sha512(), "SHA-512", selected) ||
@@ -998,12 +1370,23 @@ bool Speed(const std::vector<std::string> &args) {
       !SpeedECDH(selected) ||
       !SpeedECDSA(selected) ||
       !Speed25519(selected) ||
-      !SpeedSIKEP434(selected) ||
       !SpeedSPAKE2(selected) ||
       !SpeedScrypt(selected) ||
       !SpeedRSAKeyGen(selected) ||
-      !SpeedHRSS(selected)) {
+      !SpeedHRSS(selected) ||
+      !SpeedHashToCurve(selected) ||
+      !SpeedTrustToken("TrustToken-Exp0-Batch1", TRUST_TOKEN_experiment_v0(), 1,
+                       selected) ||
+      !SpeedTrustToken("TrustToken-Exp0-Batch10", TRUST_TOKEN_experiment_v0(),
+                       10, selected) ||
+      !SpeedTrustToken("TrustToken-Exp1-Batch1", TRUST_TOKEN_experiment_v1(), 1,
+                       selected) ||
+      !SpeedTrustToken("TrustToken-Exp1-Batch10", TRUST_TOKEN_experiment_v1(),
+                       10, selected)) {
     return false;
+  }
+  if (g_print_json) {
+    puts("\n]");
   }
 
   return true;

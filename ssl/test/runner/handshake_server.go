@@ -8,6 +8,7 @@ import (
 	"bytes"
 	"crypto"
 	"crypto/ecdsa"
+	"crypto/ed25519"
 	"crypto/elliptic"
 	"crypto/rsa"
 	"crypto/subtle"
@@ -17,8 +18,6 @@ import (
 	"io"
 	"math/big"
 	"time"
-
-	"boringssl.googlesource.com/boringssl/ssl/test/runner/ed25519"
 )
 
 // serverHandshakeState contains details of a server handshake in progress.
@@ -211,7 +210,7 @@ func (hs *serverHandshakeState) readClientHello() error {
 	if config.Bugs.FailIfCECPQ2Offered {
 		for _, offeredCurve := range hs.clientHello.supportedCurves {
 			if isPqGroup(offeredCurve) {
-				return errors.New("tls: CECPQ2 or CECPQ2b was offered")
+				return errors.New("tls: CECPQ2 was offered")
 			}
 		}
 	}
@@ -226,10 +225,6 @@ func (hs *serverHandshakeState) readClientHello() error {
 				return fmt.Errorf("tls: key share #%d is for group %d, not %d", i, found, group)
 			}
 		}
-	}
-
-	if c.config.Bugs.ExpectPQExperimentSignal != hs.clientHello.pqExperimentSignal {
-		return fmt.Errorf("tls: PQ experiment signal presence (%t) was not what was expected", hs.clientHello.pqExperimentSignal)
 	}
 
 	c.clientVersion = hs.clientHello.vers
@@ -304,6 +299,9 @@ func (hs *serverHandshakeState) readClientHello() error {
 		}
 	}
 
+	if config.Bugs.MockQUICTransport != nil && len(hs.clientHello.sessionId) > 0 {
+		return fmt.Errorf("tls: QUIC client did not disable compatibility mode")
+	}
 	if config.Bugs.ExpectNoTLS12Session {
 		if len(hs.clientHello.sessionId) > 0 && c.vers >= VersionTLS13 {
 			return fmt.Errorf("tls: client offered an unexpected session ID")
@@ -359,10 +357,6 @@ func (hs *serverHandshakeState) readClientHello() error {
 		if !greaseFound && config.Bugs.ExpectGREASE {
 			return errors.New("tls: no GREASE curve value found")
 		}
-	}
-
-	if err := checkRSAPSSSupport(config.Bugs.ExpectRSAPSSSupport, hs.clientHello.signatureAlgorithms, hs.clientHello.signatureAlgorithmsCert); err != nil {
-		return err
 	}
 
 	applyBugsToClientHello(hs.clientHello, config)
@@ -617,7 +611,12 @@ ResendHelloRetryRequest:
 
 		oldClientHelloBytes := hs.clientHello.marshal()
 		hs.writeServerHash(helloRetryRequest.marshal())
-		c.writeRecord(recordTypeHandshake, helloRetryRequest.marshal())
+		if c.config.Bugs.PartialServerHelloWithHelloRetryRequest {
+			data := helloRetryRequest.marshal()
+			c.writeRecord(recordTypeHandshake, append(data[:len(data):len(data)], typeServerHello))
+		} else {
+			c.writeRecord(recordTypeHandshake, helloRetryRequest.marshal())
+		}
 		c.flushHandshake()
 
 		if !c.config.Bugs.SkipChangeCipherSpec {
@@ -625,7 +624,7 @@ ResendHelloRetryRequest:
 		}
 
 		if hs.clientHello.hasEarlyData {
-			c.skipEarlyData = true
+			c.setSkipEarlyData()
 		}
 
 		// Read new ClientHello.
@@ -713,7 +712,10 @@ ResendHelloRetryRequest:
 	// Decide whether or not to accept early data.
 	if !sendHelloRetryRequest && hs.clientHello.hasEarlyData {
 		if !config.Bugs.AlwaysRejectEarlyData && hs.sessionState != nil {
-			if c.clientProtocol == string(hs.sessionState.earlyALPN) || config.Bugs.AlwaysAcceptEarlyData {
+			if hs.sessionState.cipherSuite == hs.suite.id && c.clientProtocol == string(hs.sessionState.earlyALPN) {
+				encryptedExtensions.extensions.hasEarlyData = true
+			}
+			if config.Bugs.AlwaysAcceptEarlyData {
 				encryptedExtensions.extensions.hasEarlyData = true
 			}
 		}
@@ -721,11 +723,11 @@ ResendHelloRetryRequest:
 			earlyTrafficSecret := hs.finishedHash.deriveSecret(earlyTrafficLabel)
 			c.earlyExporterSecret = hs.finishedHash.deriveSecret(earlyExporterLabel)
 
-			if err := c.useInTrafficSecret(c.wireVersion, hs.suite, earlyTrafficSecret); err != nil {
+			sessionCipher := cipherSuiteFromID(hs.sessionState.cipherSuite)
+			if err := c.useInTrafficSecret(c.wireVersion, sessionCipher, earlyTrafficSecret); err != nil {
 				return err
 			}
 
-			c.earlyCipherSuite = hs.suite
 			for _, expectedMsg := range config.Bugs.ExpectEarlyData {
 				if err := c.readRecord(recordTypeApplicationData); err != nil {
 					return err
@@ -738,7 +740,7 @@ ResendHelloRetryRequest:
 				c.input = nil
 			}
 		} else {
-			c.skipEarlyData = true
+			c.setSkipEarlyData()
 		}
 	}
 
@@ -806,15 +808,16 @@ ResendHelloRetryRequest:
 	}
 
 	// Send unencrypted ServerHello.
-	hs.writeServerHash(hs.hello.marshal())
+	helloBytes := hs.hello.marshal()
+	hs.writeServerHash(helloBytes)
+	if config.Bugs.PartialServerHelloWithHelloRetryRequest {
+		// The first byte has already been written.
+		helloBytes = helloBytes[1:]
+	}
 	if config.Bugs.PartialEncryptedExtensionsWithServerHello {
-		helloBytes := hs.hello.marshal()
-		toWrite := make([]byte, 0, len(helloBytes)+1)
-		toWrite = append(toWrite, helloBytes...)
-		toWrite = append(toWrite, typeEncryptedExtensions)
-		c.writeRecord(recordTypeHandshake, toWrite)
+		c.writeRecord(recordTypeHandshake, append(helloBytes[:len(helloBytes):len(helloBytes)], typeEncryptedExtensions))
 	} else {
-		c.writeRecord(recordTypeHandshake, hs.hello.marshal())
+		c.writeRecord(recordTypeHandshake, helloBytes)
 	}
 	c.flushHandshake()
 
@@ -988,7 +991,7 @@ ResendHelloRetryRequest:
 	}
 	c.flushHandshake()
 
-	if encryptedExtensions.extensions.hasEarlyData && !c.skipEarlyData {
+	if encryptedExtensions.extensions.hasEarlyData && !c.shouldSkipEarlyData() {
 		for _, expectedMsg := range config.Bugs.ExpectLateEarlyData {
 			if err := c.readRecord(recordTypeApplicationData); err != nil {
 				return err
@@ -1022,7 +1025,7 @@ ResendHelloRetryRequest:
 	}
 
 	// Read end_of_early_data.
-	if encryptedExtensions.extensions.hasEarlyData {
+	if encryptedExtensions.extensions.hasEarlyData && config.Bugs.MockQUICTransport == nil {
 		msg, err := c.readHandshake()
 		if err != nil {
 			return err
@@ -1228,7 +1231,7 @@ func (hs *serverHandshakeState) processClientHello() (isResume bool, err error) 
 Curves:
 	for _, curve := range hs.clientHello.supportedCurves {
 		if isPqGroup(curve) && c.vers < VersionTLS13 {
-			// CECPQ2 and CECPQ2b is TLS 1.3-only.
+			// CECPQ2 is TLS 1.3-only.
 			continue
 		}
 
@@ -1451,7 +1454,6 @@ func (hs *serverHandshakeState) processClientExtensions(serverExtensions *server
 	}
 
 	serverExtensions.serverNameAck = c.config.Bugs.SendServerNameAck
-	serverExtensions.pqExperimentSignal = hs.clientHello.pqExperimentSignal
 
 	return nil
 }
@@ -1687,8 +1689,19 @@ func (hs *serverHandshakeState) doFullHandshake() error {
 	}
 
 	helloDone := new(serverHelloDoneMsg)
-	hs.writeServerHash(helloDone.marshal())
-	c.writeRecord(recordTypeHandshake, helloDone.marshal())
+	helloDoneBytes := helloDone.marshal()
+	hs.writeServerHash(helloDoneBytes)
+	var toAppend byte
+	if config.Bugs.PartialNewSessionTicketWithServerHelloDone {
+		toAppend = typeNewSessionTicket
+	} else if config.Bugs.PartialFinishedWithServerHelloDone {
+		toAppend = typeFinished
+	}
+	if toAppend != 0 {
+		c.writeRecord(recordTypeHandshake, append(helloDoneBytes[:len(helloDoneBytes):len(helloDoneBytes)], toAppend))
+	} else {
+		c.writeRecord(recordTypeHandshake, helloDoneBytes)
+	}
 	c.flushHandshake()
 
 	var pub crypto.PublicKey // public key for client auth, if any
@@ -1947,7 +1960,12 @@ func (hs *serverHandshakeState) sendSessionTicket() error {
 	}
 
 	hs.writeServerHash(m.marshal())
-	c.writeRecord(recordTypeHandshake, m.marshal())
+	if c.config.Bugs.PartialNewSessionTicketWithServerHelloDone {
+		// The first byte was already sent.
+		c.writeRecord(recordTypeHandshake, m.marshal()[1:])
+	} else {
+		c.writeRecord(recordTypeHandshake, m.marshal())
+	}
 
 	return nil
 }
@@ -1965,6 +1983,10 @@ func (hs *serverHandshakeState) sendFinished(out []byte, isResume bool) error {
 	hs.finishedBytes = finished.marshal()
 	hs.writeServerHash(hs.finishedBytes)
 	postCCSBytes := hs.finishedBytes
+	if c.config.Bugs.PartialFinishedWithServerHelloDone {
+		// The first byte has already been sent.
+		postCCSBytes = postCCSBytes[1:]
+	}
 
 	if c.config.Bugs.FragmentAcrossChangeCipherSpec {
 		c.writeRecord(recordTypeHandshake, postCCSBytes[:5])
@@ -2057,7 +2079,7 @@ func (hs *serverHandshakeState) processCertsFromClient(certificates [][]byte) (c
 	}
 
 	if len(certs) > 0 {
-		pub := getCertificatePublicKey(certs[0])
+		pub := certs[0].PublicKey
 		switch pub.(type) {
 		case *ecdsa.PublicKey, *rsa.PublicKey, ed25519.PublicKey:
 			break
