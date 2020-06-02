@@ -358,6 +358,7 @@ class GN(object):
                                 files['ssl'] + files['ssl_internal_headers'])
       self.PrintVariableSection(out, 'ssl_headers', files['ssl_headers'])
 
+      # OQS note: This is for building with Chromium.
       self.PrintVariableSection(out, 'oqs_headers',
                                 files['oqs_headers'])
 
@@ -915,6 +916,7 @@ def main(platforms):
           NotSSLHeaderFiles))
 
   ssl_internal_h_files = FindHeaderFiles(os.path.join('src', 'ssl'), NoTests)
+  # OQS note: This is for building with Chromium.
   oqs_h_files = FindHeaderFiles(os.path.join('src', 'oqs', 'include', 'oqs'), NoTests)
   crypto_internal_h_files = (
       FindHeaderFiles(os.path.join('src', 'third_party', 'fiat'), NoTests))

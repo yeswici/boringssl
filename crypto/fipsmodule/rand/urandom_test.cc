@@ -20,7 +20,8 @@
 #include "internal.h"
 #include "getrandom_fillin.h"
 
-#if defined(OPENSSL_X86_64) && !defined(BORINGSSL_SHARED_LIBRARY) && \
+// OQS note: Check top level CMakeLists.txt for the reason for OQS_RUN_URANDOM_TESTS
+#if defined(OPENSSL_X86_64) && defined(OQS_RUN_URANDOM_TESTS) && !defined(BORINGSSL_SHARED_LIBRARY) && \
     !defined(BORINGSSL_UNSAFE_DETERMINISTIC_MODE) && defined(USE_NR_getrandom)
 
 #include <linux/random.h>

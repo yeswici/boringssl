@@ -597,6 +597,12 @@ endif()
 if(NOT EXISTS ${LIBOQS})
   message(FATAL_ERROR "This fork requires liboqs.")
 endif()
+# CircleCI reports
+# "getrandom: Operation not permitted"
+# when trying to run fipsmodule/rand/urandom_test.cc
+if(NOT DEFINED ENV{CIRCLE_BUILD_NUM})
+    add_definitions(-DOQS_RUN_URANDOM_TESTS)
+endif()
 
 add_subdirectory(crypto)
 add_subdirectory(ssl)
