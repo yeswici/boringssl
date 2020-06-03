@@ -574,10 +574,10 @@ static const CurveTest kCurveTests[] = {
     },
   },
   {
-    "ntru_hrss701:p256_ntru_hrss701",
+    "ntru_hrss701:p384_ntru_hrss701",
     {
       SSL_CURVE_NTRU_HRSS701,
-      SSL_CURVE_P256_NTRU_HRSS701,
+      SSL_CURVE_P384_NTRU_HRSS701,
     },
   },
   {

@@ -4426,9 +4426,6 @@ extern "C" {
 #define SN_ntru_hrss701 "ntru_hrss701"
 #define NID_ntru_hrss701 1019
 
-#define SN_p256_ntru_hrss701 "p256_ntru_hrss701"
-#define NID_p256_ntru_hrss701 1020
-
 #define SN_lightsaber "lightsaber"
 #define NID_lightsaber 1021
 
@@ -4790,6 +4787,9 @@ extern "C" {
 #define LN_sphincsshake256256ssimple "sphincsshake256256ssimple"
 #define NID_sphincsshake256256ssimple 1106
 #define OBJ_sphincsshake256256ssimple 1L, 3L, 9999L, 8L, 12L
+
+#define SN_p384_ntru_hrss701 "p384_ntru_hrss701"
+#define NID_p384_ntru_hrss701 1107
 
 
 #if defined(__cplusplus)

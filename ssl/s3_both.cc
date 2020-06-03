@@ -707,7 +707,7 @@ class CipherScorer {
                               group_id != SSL_CURVE_NTRU_HPS4096821 &&
                               group_id != SSL_CURVE_P521_NTRU_HPS4096821 &&
                               group_id != SSL_CURVE_NTRU_HRSS701 &&
-                              group_id != SSL_CURVE_P256_NTRU_HRSS701 &&
+                              group_id != SSL_CURVE_P384_NTRU_HRSS701 &&
                               group_id != SSL_CURVE_LIGHTSABER &&
                               group_id != SSL_CURVE_P256_LIGHTSABER &&
                               group_id != SSL_CURVE_SABER &&

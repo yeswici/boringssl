@@ -582,7 +582,7 @@ CONSTEXPR_ARRAY NamedGroup kNamedGroups[] = {
     {NID_ntru_hps4096821, SSL_CURVE_NTRU_HPS4096821, "ntru_hps4096821", "ntru_hps4096821"},
     {NID_p521_ntru_hps4096821, SSL_CURVE_P521_NTRU_HPS4096821, "p521_ntru_hps4096821", "p521_ntru_hps4096821"},
     {NID_ntru_hrss701, SSL_CURVE_NTRU_HRSS701, "ntru_hrss701", "ntru_hrss701"},
-    {NID_p256_ntru_hrss701, SSL_CURVE_P256_NTRU_HRSS701, "p256_ntru_hrss701", "p256_ntru_hrss701"},
+    {NID_p384_ntru_hrss701, SSL_CURVE_P384_NTRU_HRSS701, "p384_ntru_hrss701", "p384_ntru_hrss701"},
     {NID_lightsaber, SSL_CURVE_LIGHTSABER, "lightsaber", "lightsaber"},
     {NID_p256_lightsaber, SSL_CURVE_P256_LIGHTSABER, "p256_lightsaber", "p256_lightsaber"},
     {NID_saber, SSL_CURVE_SABER, "saber", "saber"},
@@ -870,9 +870,9 @@ UniquePtr<SSLKeyShare> SSLKeyShare::Create(uint16_t group_id) {
           return UniquePtr<SSLKeyShare>(New<OQSKeyShare>(SSL_CURVE_NTRU_HRSS701, OQS_KEM_alg_ntru_hrss701));
       else
           return nullptr;
-    case SSL_CURVE_P256_NTRU_HRSS701:
+    case SSL_CURVE_P384_NTRU_HRSS701:
       if(OQS_KEM_alg_is_enabled(OQS_KEM_alg_ntru_hrss701))
-          return UniquePtr<SSLKeyShare>(New<ClassicalWithOQSKeyShare>(SSL_CURVE_P256_NTRU_HRSS701, SSL_CURVE_SECP256R1, OQS_KEM_alg_ntru_hrss701));
+          return UniquePtr<SSLKeyShare>(New<ClassicalWithOQSKeyShare>(SSL_CURVE_P384_NTRU_HRSS701, SSL_CURVE_SECP384R1, OQS_KEM_alg_ntru_hrss701));
       else
           return nullptr;
     case SSL_CURVE_LIGHTSABER:

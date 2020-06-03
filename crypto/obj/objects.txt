@@ -1403,7 +1403,7 @@ secg-scheme 14 3 : dhSinglePass-cofactorDH-sha512kdf-scheme
  : ntru_hps4096821
  : p521_ntru_hps4096821
  : ntru_hrss701
- : p256_ntru_hrss701
+ : p384_ntru_hrss701
  : lightsaber
  : p256_lightsaber
  : saber

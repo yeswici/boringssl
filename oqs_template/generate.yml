@@ -119,7 +119,7 @@ kems:
   -
     name: 'ntru_hrss701'
     nid: '0x0217'
-    mix_with: [{'name': 'p256', 'mix_nid':'0x2F17', 'nid':'SSL_CURVE_SECP256R1'}]
+    mix_with: [{'name': 'p384', 'mix_nid':'0x2F17', 'nid':'SSL_CURVE_SECP384R1'}]
     oqs_meth: 'OQS_KEM_alg_ntru_hrss701'
   -
     name: 'lightsaber'
