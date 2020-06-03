@@ -5,7 +5,7 @@ OQS-BoringSSL
 
 [BoringSSL](https://boringssl.googlesource.com/boringssl/) is a fork, maintained by Google, of the [OpenSSL](https://www.openssl.org/) cryptographic library. ([View the original README](README).)
 
-OQS-BoringSSL is a fork of BoringSSL that adds quantum-safe key exchange and authentication algorithms using [liboqs](https://github.com/open-quantum-safe/liboqs) for prototyping and evaluation purposes. This fork is not endorsed by the BoringSSL project or Google.
+OQS-BoringSSL is a fork of BoringSSL that adds quantum-safe key exchange and authentication algorithms using [liboqs](https://github.com/open-quantum-safe/liboqs) for prototyping and evaluation purposes. This fork is not endorsed by Google.
 
 - [Overview](#overview)
 - [Status](#status)
@@ -15,7 +15,6 @@ OQS-BoringSSL is a fork of BoringSSL that adds quantum-safe key exchange and aut
   * [Building](#building)
     * [Linux](#linux)
   * [Running](#running)
-- [API Stability](#api-stability)
 - [Team](#team)
 - [Acknowledgements](#acknowledgements)
 
@@ -23,24 +22,24 @@ OQS-BoringSSL is a fork of BoringSSL that adds quantum-safe key exchange and aut
 
 **liboqs** is an open source C library for quantum-resistant cryptographic algorithms. See [here](https://github.com/open-quantum-safe/liboqs/) for more information.
 
-**OQS-BoringSSL** is a fork that integrates liboqs into BoringSSL.  The goal of this integration is to provide easy prototyping of quantum-safe cryptography in the TLS 1.3 protocol. (For TLS 1.2, see the [OQS-OpenSSL\_1\_0\_2-stable](https://github.com/open-quantum-safe/openssl/tree/OQS-OpenSSL_1_0_2-stable) branch.)
-
+**OQS-BoringSSL** is a fork that integrates liboqs into BoringSSL so as to facilitate the evaluation of quantum-safe cryptography in the TLS 1.3 protocol.
 Both liboqs and this fork are part of the **Open Quantum Safe (OQS) project**, which aims to develop and prototype quantum-safe cryptography. More information about the project can be found [here](https://openquantumsafe.org/).
 
 ## Status
 
-This fork is built on top of [commit do41f11](https://github.com/open-quantum-safe/boringssl/commit/d041f11134951ea34c549032d20d041112697e4c), and adds the following:
+This fork is built on top of [commit 78b3337a10a7f7b3495b6cb8140a74e265290898](https://github.com/open-quantum-safe/boringssl/commit/78b3337a10a7f7b3495b6cb8140a74e265290898), and adds:
 
-- quantum-safe key exchange in TLS 1.3
-- hybrid (quantum-safe + elliptic curve) key exchange in TLS 1.3
+- quantum-safe key exchange to TLS 1.3
+- hybrid (quantum-safe + elliptic curve) key exchange to TLS 1.3
+- quantum-safe digital signatures to TLS 1.3
 
-**This fork is at an experimental stage**. The BoringSSL project also does not guarantee API or ABI stability. See the [Limitations and Security](#limitations-and-security) section below for more information.
 
-**We do not recommend relying on this fork in a production environment or to protect any sensitive data.**
+**WE DO NOT RECOMMEND RELYING ON THIS FORK IN A PRODUCTION ENVIRONMENT OR TO PROTECT ANY SENSITIVE DATA.** This fork is at an experimental stage, and BoringSSL does not guarantee API or ABI stability. See the [Limitations and Security](#limitations-and-security) section below for more information.
 
 liboqs and this integration are provided "as is", without warranty of any kind.  See the [LICENSE](https://github.com/open-quantum-safe/liboqs/blob/master/LICENSE.txt) for the full disclaimer.
 
 ### Limitations and security
+
 As research advances, the supported algorithms may see rapid changes in their security, and may even prove insecure against both classical and quantum computers.
 
 We believe that the NIST Post-Quantum Cryptography standardization project is currently the best avenue to identifying potentially quantum-resistant algorithms, and strongly recommend that applications and protocols rely on the outcomes of the NIST standardization project when deploying quantum-safe cryptography.
@@ -51,6 +50,10 @@ We realize some parties may want to deploy quantum-safe cryptography prior to th
 
 Proofs of TLS such as [[JKSS12]](https://eprint.iacr.org/2011/219) and [[KPW13]](https://eprint.iacr.org/2013/339) require a key exchange mechanism that has a form of active security, either in the form of the PRF-ODH assumption, or an IND-CCA KEM.
 Some of the KEMs provided in liboqs do provide IND-CCA security; others do not ([these datasheets](https://github.com/open-quantum-safe/liboqs/tree/master/docs/algorithms) specify which provide what security), in which case existing proofs of security of TLS against active attackers do not apply.
+
+Furthermore, the BoringSSL project does not guarantee API or ABI stability; this fork is maintained primarily to enable the use of quantum-safe cryptography in the [Chromium](https://www.chromium.org/) web browser, which relies on BoringSSL's TLS implementation.
+
+The fork is currently based on commit hash `78b3337a10a7f7b3495b6cb8140a74e265290898` which has been verified to work with Chromium tag `85.0.4161.2`. If we do decide to BoringSSL, we will do so to the most recent commit that is supported by the desired tag at which we would like Chromium to be. **We consequently also cannot guarantee API or ABI stability for this fork.**
 
 ### Supported Algorithms
 
@@ -71,15 +74,15 @@ The following quantum-safe algorithms from liboqs are supported (assuming they h
 - **SIKE**: `sikep434`, `sikep503`, `sikep610`, `sikep751`
 - **ThreeBears**: `babybear`, `babybear_ephem`, `mamabear`, `mamabear_ephem`, `papabear`, `papabear_ephem`
 
-The following hybrid algorithms are supported depending on the security of each scheme above, denoted by `<KEX>`:
+For each `<KEX>` listed above, the following hybrid algorithms are made available as follows:
 
-- If `<KEX>` has L1 security, the method `p256_<KEX>` is available, which combines `<KEX>` with ECDH using NIST's P256 curve:
-- If `<KEX>` has L3 security, the method `p384_<KEX>` is available, which combines `<KEX>` with ECDH using NIST's P384 curve:
-- If `<KEX>` has L5 security, the method `p521_<KEX>` is available, which combines `<KEX>` with ECDH using NIST's P521 curve:
+- If `<KEX>` has L1 security, the method `p256_<KEX>` is available, which combines `<KEX>` with ECDH using NIST's P256 curve
+- If `<KEX>` has L3 security, the method `p384_<KEX>` is available, which combines `<KEX>` with ECDH using NIST's P384 curve
+- If `<KEX>` has L5 security, the method `p521_<KEX>` is available, which combines `<KEX>` with ECDH using NIST's P521 curve
 
 #### Signatures
 
-The following quantum-safe algorithms from liboqs are supported (assuming they have been enabled in liboqs):
+The following quantum-safe digital signature algorithms from liboqs are supported (assuming they have been enabled in liboqs):
 
 - `oqs_sig_default` (see [here](https://github.com/open-quantum-safe/boringssl/wiki/Using-liboqs-algorithms-not-in-the-fork#oqsdefault) for what this denotes)
 - **CRYSTALS-DILITHIUM**: `dilithium2`, `dilithium3`, `dilithium4`
@@ -94,7 +97,7 @@ The following quantum-safe algorithms from liboqs are supported (assuming they h
 
 ## Quickstart
 
-The steps below have been confirmed to work on Ubuntu 19.10 (gcc-8.3.0).
+The steps below have been confirmed to work on Ubuntu 19.10 (using `gcc-8.3.0` and `clang-10`).
 
 ### Building
 
@@ -105,10 +108,12 @@ The steps below have been confirmed to work on Ubuntu 19.10 (gcc-8.3.0).
 On **Ubuntu**, you need to install the following packages:
 
 ```
-sudo apt install gcc golang-go cmake ninja python3-pytest python3-pytest-xdist python3-psutil
+sudo apt install cmake gcc ninja libunwind-dev pkg-config python3 python3-pytest python3-psutil python3-pytest-xdist
 ```
 
-Then, get source code of this fork (`<BORINGSSL_DIR>` is a directory of your choosing):
+You will also need the latest version of the toolchain for the Go programming language, available [here](https://golang.org/dl/)
+
+Then, get the source code for this fork (`<BORINGSSL_DIR>` is a directory of your choosing):
 
 ```
 git clone --branch master https://github.com/open-quantum-safe/boringssl.git <BORINGSSL_DIR>
@@ -142,7 +147,10 @@ ninja
 
 The fork can also be built with shared libraries, to do so, run `cmake -DBUILD_SHARED_LIBRARIES=ON -GNinja ..`.
 
-To execute the white-box and black-box tests, run `ninja run_tests` from the `build` directory. These exclude the OQS key-exchange and digital signature algorithms, which can be tested using `ninja run_basic_oqs_tests` and `ninja run_full_oqs_tests`:
+
+#### Step 3: Run tests
+
+To execute the white-box and black-box tests that come with BoringSSL, execute `ninja run_tests` from the `build` directory. These exclude the OQS key-exchange and digital signature algorithms, which can be tested using `ninja run_basic_oqs_tests` and `ninja run_full_oqs_tests`:
 
 - `ninja run_basic_oqs_tests` first tests all key-exchanges with the signature set to `oqs_sigdefault`, and then tests all signatures with the key-exchange algorithm set to `oqs_kemdefault`.
 - `ninja run_full_oqs_tests` tests all possible combinations of OQS key-exchange and signature schemes.
@@ -151,25 +159,23 @@ To execute the white-box and black-box tests, run `ninja run_tests` from the `bu
 
 #### TLS demo
 
-BoringSSL contains a basic TLS server (`s_server`) and TLS client (`s_client`) which can be used to demonstrate and test TLS connections.
+BoringSSL contains a basic TLS server (`server`) and TLS client (`client`) which can be used to demonstrate and test TLS connections.
 
-To run a basic TLS server with all libOQS ciphersuites enabled, from the `build` directory, run (where `<SIG>` = one of the quantum-safe or hybrid signature algorithms listed in the [Supported Algorithms](#supported-algorithms) section above; if the `sig-alg` option is omitted, the default classical algorithm `ecdhe` with prime curve `X9_62_prime256v1` is used):
+To run a basic TLS server with all liboqs algorithms enabled, from the `build` directory, run:
 
 ```
 tool/bssl server -accept 4433 -sig-alg <SIG> -loop
 ```
 
-In another terminal window, you can run a TLS client requesting one of the supported ciphersuites (where `<KEX>` = one of the quantum-safe or hybrid key exchange algorithms listed in the [Supported Algorithms](#supported-algorithms) section above):
+where `<SIG>` is one of the quantum-safe or hybrid signature algorithms listed in the [Supported Algorithms](#supported-algorithms) section above; if the `sig-alg` option is omitted, the default classical algorithm `ecdhe` with prime curve `X9_62_prime256v1` is used.
+
+In another terminal window, you can run a TLS client requesting one of the supported key-exchange algorithms:
 
 ```
 tool/bssl client -curves <KEX> -connect localhost:4433
 ```
 
-## API Stability
-
-As previously noted, the BoringSSL project does not guarantee API or ABI stability; this fork is maintained primarily to enable the use of quantum-safe cryptography in the [Chromium](https://www.chromium.org/) and [quiche](https://github.com/cloudflare/quiche) projects, both of which rely on BoringSSL's TLS implementation.
-
-This fork is currently based on commit hash `d041f11134951ea34c549032d20d041112697e4c`. If we do decide to update, we will do so to the most recent BoringSSL commit that is supported by the desired commits at which we would like Chromium and quiche to be. We consequently also cannot guarantee API or ABI stability for this fork.
+where `<KEX>` = one of the quantum-safe or hybrid key exchange algorithms listed in the [Supported Algorithms](#supported-algorithms) section above.
 
 ## Team
 

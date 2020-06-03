@@ -59,7 +59,6 @@
 #include <time.h>
 
 #include <openssl/asn1.h>
-#include <openssl/buf.h>
 #include <openssl/err.h>
 #include <openssl/evp.h>
 #include <openssl/mem.h>
@@ -2145,6 +2144,11 @@ X509 *X509_STORE_CTX_get_current_cert(X509_STORE_CTX *ctx)
 }
 
 STACK_OF(X509) *X509_STORE_CTX_get_chain(X509_STORE_CTX *ctx)
+{
+    return ctx->chain;
+}
+
+STACK_OF(X509) *X509_STORE_CTX_get0_chain(X509_STORE_CTX *ctx)
 {
     return ctx->chain;
 }
