@@ -51,7 +51,7 @@ kex_to_nid = {
         'ntru_hps4096821': '534',
         'p521_ntru_hps4096821': '12054',
         'ntru_hrss701': '535',
-        'p256_ntru_hrss701': '12055',
+        'p384_ntru_hrss701': '12055',
         'lightsaber': '536',
         'p256_lightsaber': '12056',
         'saber': '537',
