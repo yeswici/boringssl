@@ -33,7 +33,6 @@ This fork is built on top of [commit 78b3337a10a7f7b3495b6cb8140a74e265290898](h
 - hybrid (quantum-safe + elliptic curve) key exchange to TLS 1.3
 - quantum-safe digital signatures to TLS 1.3
 
-
 **WE DO NOT RECOMMEND RELYING ON THIS FORK IN A PRODUCTION ENVIRONMENT OR TO PROTECT ANY SENSITIVE DATA.** This fork is at an experimental stage, and BoringSSL does not guarantee API or ABI stability. See the [Limitations and Security](#limitations-and-security) section below for more information.
 
 liboqs and this integration are provided "as is", without warranty of any kind.  See the [LICENSE](https://github.com/open-quantum-safe/liboqs/blob/master/LICENSE.txt) for the full disclaimer.
@@ -53,11 +52,11 @@ Some of the KEMs provided in liboqs do provide IND-CCA security; others do not (
 
 Furthermore, the BoringSSL project does not guarantee API or ABI stability; this fork is maintained primarily to enable the use of quantum-safe cryptography in the [Chromium](https://www.chromium.org/) web browser, which relies on BoringSSL's TLS implementation.
 
-The fork is currently based on commit hash `78b3337a10a7f7b3495b6cb8140a74e265290898` which has been verified to work with Chromium tag `85.0.4161.2`. If we do decide to BoringSSL, we will do so to the most recent commit that is supported by the desired tag at which we would like Chromium to be. **We consequently also cannot guarantee API or ABI stability for this fork.**
+The fork is currently based on commit hash `78b3337a10a7f7b3495b6cb8140a74e265290898` which has been verified to work with Chromium tag `85.0.4161.2`. If we do decide to update BoringSSL, we will do so to the most recent commit that is supported by the desired tag at which we would like Chromium to be. **We consequently also cannot guarantee API or ABI stability for this fork.**
 
 ### Supported Algorithms
 
-If an algorithm is provided by liboqs but is not listed below, it can still be used in the fork through [either one of two ways](https://github.com/open-quantum-safe/boringssl/wiki/Using-liboqs-algorithms-not-in-the-fork).
+If an algorithm is provided by liboqs but is not listed below, it might still be possible to use it in the fork through [either one of two ways](https://github.com/open-quantum-safe/boringssl/wiki/Using-liboqs-algorithms-not-in-the-fork).
 
 #### Key Exchange
 
@@ -97,7 +96,7 @@ The following quantum-safe digital signature algorithms from liboqs are supporte
 
 ## Quickstart
 
-The steps below have been confirmed to work on Ubuntu 19.10 (using `gcc-8.3.0` and `clang-10`).
+We regularly test the fork on Ubuntu 18.04 and above. Support for other platforms and operating systems, as well as for old versions of GCC (< 8) and Clang (< 8), is not guaranteed.
 
 ### Building
 
@@ -189,6 +188,6 @@ Contributors to this fork include:
 ## Acknowledgments
 
 Financial support for the development of Open Quantum Safe has been provided by Amazon Web Services and the Tutte Institute for Mathematics and Computing.
-We'd like to make a special acknowledgement to the companies who have dedicated programmer time to contribute source code to OQS, including Amazon Web Services, Cisco Systems, evolutionQ, and Microsoft Research.
+We'd like to make a special acknowledgement to the companies who have dedicated programmer time to contribute source code to OQS, including Amazon Web Services, evolutionQ, Microsoft Research, Cisco Systems, and IBM Research.
 
 Research projects which developed specific components of OQS have been supported by various research grants, including funding from the Natural Sciences and Engineering Research Council of Canada (NSERC); see [here](https://openquantumsafe.org/papers/SAC-SteMos16.pdf) and [here](https://openquantumsafe.org/papers/NISTPQC-CroPaqSte19.pdf) for funding acknowledgments.
