@@ -1,4 +1,4 @@
-OQS-BoringSSL snapshot 2020-06-rc1
+OQS-BoringSSL snapshot 2020-06-rc2
 ==================================
 
 About
@@ -13,7 +13,7 @@ The **Open Quantum Safe (OQS) project** has the goal of developing and prototypi
 Release notes
 =============
 
-This is release candidate 1 for the 2020-06 snapshot release of OQS-OpenSSL. This release candidate was released on June 5, 2020. Its release page on GitHub is https://github.com/open-quantum-safe/boring/releases/tag/OQS-BoringSSL-snapshot-2020-06-rc1.
+This is release candidate 2 for the 2020-06 snapshot release of OQS-OpenSSL. This release candidate was released on June 23, 2020. Its release page on GitHub is https://github.com/open-quantum-safe/boring/releases/tag/OQS-BoringSSL-snapshot-2020-06-rc2.
 
 What's New
 ----------
