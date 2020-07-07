@@ -4411,12 +4411,6 @@ TEST(SSLTest, SignatureAlgorithmProperties) {
             SSL_get_signature_algorithm_key_type(SSL_SIGN_PICNICL1FS));
   EXPECT_EQ(EVP_PKEY_PICNICL1UR,
             SSL_get_signature_algorithm_key_type(SSL_SIGN_PICNICL1UR));
-  EXPECT_EQ(EVP_PKEY_PICNIC2L1FS,
-            SSL_get_signature_algorithm_key_type(SSL_SIGN_PICNIC2L1FS));
-  EXPECT_EQ(EVP_PKEY_PICNIC2L3FS,
-            SSL_get_signature_algorithm_key_type(SSL_SIGN_PICNIC2L3FS));
-  EXPECT_EQ(EVP_PKEY_PICNIC2L5FS,
-            SSL_get_signature_algorithm_key_type(SSL_SIGN_PICNIC2L5FS));
   EXPECT_EQ(EVP_PKEY_QTESLAPI,
             SSL_get_signature_algorithm_key_type(SSL_SIGN_QTESLAPI));
   EXPECT_EQ(EVP_PKEY_QTESLAPIII,
@@ -4823,9 +4817,6 @@ TEST(SSLTest, SigAlgs) {
       {{NID_sha384, EVP_PKEY_MQDSS3164}, true, {SSL_SIGN_MQDSS3164}},
       {{NID_sha256, EVP_PKEY_PICNICL1FS}, true, {SSL_SIGN_PICNICL1FS}},
       {{NID_sha256, EVP_PKEY_PICNICL1UR}, true, {SSL_SIGN_PICNICL1UR}},
-      {{NID_sha256, EVP_PKEY_PICNIC2L1FS}, true, {SSL_SIGN_PICNIC2L1FS}},
-      {{NID_sha384, EVP_PKEY_PICNIC2L3FS}, true, {SSL_SIGN_PICNIC2L3FS}},
-      {{NID_sha384, EVP_PKEY_PICNIC2L5FS}, true, {SSL_SIGN_PICNIC2L5FS}},
       {{NID_sha256, EVP_PKEY_QTESLAPI}, true, {SSL_SIGN_QTESLAPI}},
       {{NID_sha384, EVP_PKEY_QTESLAPIII}, true, {SSL_SIGN_QTESLAPIII}},
       {{NID_sha256, EVP_PKEY_RAINBOWIACLASSIC}, true, {SSL_SIGN_RAINBOWIACLASSIC}},
@@ -4940,9 +4931,6 @@ TEST(SSLTest, SigAlgsList) {
       {"mqdss3164", true, {SSL_SIGN_MQDSS3164}},
       {"picnicl1fs", true, {SSL_SIGN_PICNICL1FS}},
       {"picnicl1ur", true, {SSL_SIGN_PICNICL1UR}},
-      {"picnic2l1fs", true, {SSL_SIGN_PICNIC2L1FS}},
-      {"picnic2l3fs", true, {SSL_SIGN_PICNIC2L3FS}},
-      {"picnic2l5fs", true, {SSL_SIGN_PICNIC2L5FS}},
       {"qteslapi", true, {SSL_SIGN_QTESLAPI}},
       {"qteslapiii", true, {SSL_SIGN_QTESLAPIII}},
       {"rainbowIaclassic", true, {SSL_SIGN_RAINBOWIACLASSIC}},
